@@ -1,0 +1,29 @@
+arrival_rate_rpm,system,simulated,effective_throughput_rpm,throughput_ci95_rpm,mean_queue_depth,drop_timeout_pct,drop_timeout_ci95_pct,attack_miss_pct,attack_miss_ci95_pct,p50_latency_ms,p95_latency_ms,p95_latency_ci95_ms
+5,Simulated HITL (1 reviewer),True,5.04,0.0,0.0,0.0,0.0,4.67,2.27,1998.14,2270.45,11.6
+5,Simulated HITL (3 reviewers),True,5.04,0.0,0.0,0.0,0.0,4.67,2.27,1998.14,2270.45,11.6
+5,Automated C5 (Sandboxed),False,5.0,0.0,0.0,0.0,0.0,0.0,0.0,206.98,246.78,0.0
+5,Automated C5 (In-Process),False,5.0,0.0,0.0,0.0,0.0,0.0,0.0,28.98,35.45,0.0
+15,Simulated HITL (1 reviewer),True,15.06,0.01,0.0,0.0,0.0,4.67,2.27,1998.14,2270.45,11.6
+15,Simulated HITL (3 reviewers),True,15.06,0.01,0.0,0.0,0.0,4.67,2.27,1998.14,2270.45,11.6
+15,Automated C5 (Sandboxed),False,15.0,0.0,0.0,0.0,0.0,0.0,0.0,206.98,246.78,0.0
+15,Automated C5 (In-Process),False,15.0,0.0,0.0,0.0,0.0,0.0,0.0,28.98,35.45,0.0
+30,Simulated HITL (1 reviewer),True,29.8,0.17,0.05,0.0,0.0,4.67,2.27,2659.85,3777.84,925.94
+30,Simulated HITL (3 reviewers),True,30.01,0.03,0.0,0.0,0.0,4.67,2.27,1998.14,2270.45,11.6
+30,Automated C5 (Sandboxed),False,30.0,0.0,0.0,0.0,0.0,0.0,0.0,206.98,246.78,0.0
+30,Automated C5 (In-Process),False,30.0,0.0,0.0,0.0,0.0,0.0,0.0,28.98,35.45,0.0
+60,Simulated HITL (1 reviewer),True,30.05,0.57,6.49,43.5,1.13,12.67,9.44,15000.0,16881.09,143.7
+60,Simulated HITL (3 reviewers),True,59.53,0.11,0.0,0.0,0.0,4.67,2.27,1998.14,2270.45,11.6
+60,Automated C5 (Sandboxed),False,60.0,0.0,0.0,0.0,0.0,0.0,0.0,206.98,246.78,0.0
+60,Automated C5 (In-Process),False,60.0,0.0,0.0,0.0,0.0,0.0,0.0,28.98,35.45,0.0
+120,Simulated HITL (1 reviewer),True,30.07,0.33,6.88,68.5,0.46,4.67,4.72,15000.0,16877.53,62.32
+120,Simulated HITL (3 reviewers),True,88.53,0.83,12.34,8.33,0.73,41.33,13.91,11586.02,15371.16,181.63
+120,Automated C5 (Sandboxed),False,120.0,0.0,0.0,0.0,0.0,0.0,0.0,206.98,246.78,0.0
+120,Automated C5 (In-Process),False,120.0,0.0,0.0,0.0,0.0,0.0,0.0,28.98,35.45,0.0
+240,Simulated HITL (1 reviewer),True,30.29,0.39,7.09,80.83,0.0,8.67,9.53,15000.0,16874.7,54.98
+240,Simulated HITL (3 reviewers),True,88.84,1.67,16.61,45.33,0.57,23.33,8.78,15000.0,15422.14,265.14
+240,Automated C5 (Sandboxed),False,240.0,0.0,0.0,0.0,0.0,0.0,0.0,206.98,246.78,0.0
+240,Automated C5 (In-Process),False,240.0,0.0,0.0,0.0,0.0,0.0,0.0,28.98,35.45,0.0
+480,Simulated HITL (1 reviewer),True,30.1,0.64,7.17,87.17,0.57,4.67,8.07,15000.0,16715.16,93.84
+480,Simulated HITL (3 reviewers),True,87.79,1.7,17.4,63.67,0.57,20.0,12.07,15000.0,15471.67,206.89
+480,Automated C5 (Sandboxed),False,333.37,0.0,0.0,30.55,0.0,0.0,0.0,206.98,246.78,0.0
+480,Automated C5 (In-Process),False,480.0,0.0,0.0,0.0,0.0,0.0,0.0,28.98,35.45,0.0

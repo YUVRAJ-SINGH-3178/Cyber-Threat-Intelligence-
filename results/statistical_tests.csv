@@ -1,0 +1,10 @@
+benchmark,comparison,mean_a_pct,mean_b_pct,mean_reduction_pct,paired_t_stat,p_value,cohens_d,significant_p_lt_0_05
+Standard Suite ASR,C0 vs C1,89.23,30.38,58.85,40.891,2.1375e-06,18.287,True
+Standard Suite ASR,C1 vs C4,30.38,15.0,15.38,11.314,3.4789e-04,5.06,True
+Standard Suite ASR,C1 vs C5,30.38,0.0,30.38,21.501,2.7674e-05,9.616,True
+Standard Suite ASR,C2 vs C4,18.08,15.0,3.08,6.532,0.0028,2.921,True
+Standard Suite ASR,C3 vs C4,31.54,15.0,16.54,10.586,4.5065e-04,4.734,True
+Standard Suite ASR,C4 vs C5,15.0,0.0,15.0,39.0,2.5822e-06,17.441,True
+Holdout Unseen ASR,C0 vs C4,91.54,22.31,69.23,50.912,8.9077e-07,22.768,True
+Holdout Unseen ASR,C4 vs C5_REGEX,22.31,22.31,0.0,0.0,1.0,0.0,False
+Holdout Unseen ASR,C5_REGEX vs C5_FULL,22.31,15.77,6.54,13.88,1.5619e-04,6.208,True

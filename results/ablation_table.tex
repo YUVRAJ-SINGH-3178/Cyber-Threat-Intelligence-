@@ -1,0 +1,16 @@
+\begin{table*}[t]
+\centering
+\caption{Ablation Across Defense Conditions (5 Seeds, Mean $\pm$ 95\% CI)}
+\begin{tabular}{llrrrrrr}
+\toprule
+Cond. & Configuration & ASR (\%) & Block/Detect (\%) & Benign (\%) & Esc. (\%) & Added Step p50/p95 (ms) & TTD / TTC (ms) \\
+\midrule
+C0 & Undefended Baseline & $89.23 \pm 5.50$ & $0.00 \pm 0.00$ & $100.00 \pm 0.00$ & $0.00$ & 0.00 / 0.00 & -- / -- \\
+C1 & Simulated HITL Only & $30.38 \pm 3.92$ & $59.62 \pm 4.78$ & $90.77 \pm 4.27$ & $0.00$ & 1203.90 / 2001.34 & -- / -- \\
+C2 & Pillar 2 Guardrails Only & $18.08 \pm 1.31$ & $66.15 \pm 12.36$ & $92.31 \pm 0.00$ & $1.54$ & 0.19 / 0.00 & -- / -- \\
+C3 & Pillar 3 Runtime Only (Sandboxed) & $31.54 \pm 3.62$ & $59.62 \pm 6.09$ & $100.00 \pm 0.00$ & $0.00$ & 4.74 / 201.40 & 139.64 / 0.020 \\
+C4 & Pillars 1+2+3 (Pre-Feedback) & $15.00 \pm 1.07$ & $68.46 \pm 11.65$ & $92.31 \pm 0.00$ & $1.54$ & 7.99 / 177.34 & 337.05 / 0.023 \\
+C5 & Full 4-Pillar Loop (Post-Feedback) & $0.00 \pm 0.00$ & $83.46 \pm 11.53$ & $92.31 \pm 0.00$ & $1.54$ & 106.50 / 227.08 & 411.75 / 0.025 \\
+\bottomrule
+\end{tabular}
+\end{table*}

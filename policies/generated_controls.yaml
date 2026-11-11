@@ -1,0 +1,169 @@
+version: '1.0'
+ordered_controls:
+- rank: 1
+  control_id: CTRL_TOOL_ALLOWLIST_ARGS
+  pillar: 2
+  description: Tool allowlist, untrusted manifest rejection, path/SQL/domain argument
+    validation
+  enabled: true
+  aggregate_risk_score: 140
+  max_threat_risk: 25
+  mitigated_threats:
+  - T02_PROMPT_INJECTION_INDIRECT
+  - T03_DATA_MODEL_POISONING
+  - T06_GOAL_HIJACKING
+  - T07_TOOL_MISUSE_EXCESSIVE_AGENCY
+  - T08_CREDENTIAL_EXPOSURE
+  - T09_AGENT_IDENTITY_CONFUSION
+  - T12_SUPPLY_CHAIN_MANIFEST
+  policy_ids:
+  - POL-TOOL-001
+  - POL-TOOL-002
+  - POL-TOOL-003
+  - POL-TOOL-004
+- rank: 2
+  control_id: CTRL_RUNTIME_ANOMALY_KILLSWITCH
+  pillar: 3
+  description: Behavioral sequence/loop anomaly detection, hash-chained audit log,
+    and agent/tool kill switch
+  enabled: true
+  aggregate_risk_score: 125
+  max_threat_risk: 25
+  mitigated_threats:
+  - T02_PROMPT_INJECTION_INDIRECT
+  - T03_DATA_MODEL_POISONING
+  - T05_MEMORY_POISONING
+  - T06_GOAL_HIJACKING
+  - T10_SENSITIVE_INFO_DISCLOSURE
+  - T11_UNBOUNDED_CONSUMPTION
+  policy_ids:
+  - RT-ANOM-001
+  - RT-KILL-001
+  - RT-LOG-001
+- rank: 3
+  control_id: CTRL_OUTPUT_DLP_SCHEMA
+  pillar: 2
+  description: Post-output deterministic canary/PII DLP filter and schema validation
+  enabled: true
+  aggregate_risk_score: 120
+  max_threat_risk: 25
+  mitigated_threats:
+  - T01_PROMPT_INJECTION_DIRECT
+  - T03_DATA_MODEL_POISONING
+  - T04_RAG_RETRIEVAL_POISONING
+  - T08_CREDENTIAL_EXPOSURE
+  - T10_SENSITIVE_INFO_DISCLOSURE
+  - T13_MISINFORMATION_HALLUCINATION
+  policy_ids:
+  - POL-OUT-001
+  - POL-OUT-002
+- rank: 4
+  control_id: CTRL_POLICY_PROMPT_FRAMING
+  pillar: 2
+  description: Policy-based system prompt framing with untrusted-data boundary markers
+  enabled: true
+  aggregate_risk_score: 85
+  max_threat_risk: 25
+  mitigated_threats:
+  - T01_PROMPT_INJECTION_DIRECT
+  - T02_PROMPT_INJECTION_INDIRECT
+  - T04_RAG_RETRIEVAL_POISONING
+  - T13_MISINFORMATION_HALLUCINATION
+  policy_ids:
+  - POL-PRM-001
+- rank: 5
+  control_id: CTRL_INPUT_INJECTION_FILTER
+  pillar: 2
+  description: Deterministic pre-input & peer-message prompt-injection and override
+    filter
+  enabled: true
+  aggregate_risk_score: 70
+  max_threat_risk: 25
+  mitigated_threats:
+  - T01_PROMPT_INJECTION_DIRECT
+  - T05_MEMORY_POISONING
+  - T09_AGENT_IDENTITY_CONFUSION
+  policy_ids:
+  - POL-INP-001
+  - POL-INP-002
+- rank: 6
+  control_id: CTRL_RETRIEVAL_SCREENING
+  pillar: 2
+  description: Pre-retrieval screening for untrusted/poisoned RAG chunks and embedded
+    instructions
+  enabled: true
+  aggregate_risk_score: 45
+  max_threat_risk: 25
+  mitigated_threats:
+  - T02_PROMPT_INJECTION_INDIRECT
+  - T04_RAG_RETRIEVAL_POISONING
+  policy_ids:
+  - POL-RET-001
+  - POL-RET-002
+- rank: 7
+  control_id: CTRL_MEMORY_WRITE_GUARD
+  pillar: 2
+  description: Restrict persistent memory writes and require verified provenance
+  enabled: true
+  aggregate_risk_score: 25
+  max_threat_risk: 25
+  mitigated_threats:
+  - T05_MEMORY_POISONING
+  policy_ids:
+  - POL-MEM-001
+- rank: 8
+  control_id: CTRL_RUNTIME_IDENTITY_TOKENS
+  pillar: 3
+  description: Per-agent cryptographic identity verification and scoped short-lived
+    capability tokens
+  enabled: true
+  aggregate_risk_score: 75
+  max_threat_risk: 20
+  mitigated_threats:
+  - T07_TOOL_MISUSE_EXCESSIVE_AGENCY
+  - T08_CREDENTIAL_EXPOSURE
+  - T09_AGENT_IDENTITY_CONFUSION
+  - T12_SUPPLY_CHAIN_MANIFEST
+  policy_ids:
+  - RT-ID-001
+  - RT-CAP-001
+- rank: 9
+  control_id: CTRL_SENSITIVE_OP_ESCALATION
+  pillar: 2
+  description: Escalate sensitive outbound actions (email, external HTTP POST, secret
+    table queries)
+  enabled: true
+  aggregate_risk_score: 60
+  max_threat_risk: 20
+  mitigated_threats:
+  - T06_GOAL_HIJACKING
+  - T07_TOOL_MISUSE_EXCESSIVE_AGENCY
+  - T10_SENSITIVE_INFO_DISCLOSURE
+  policy_ids:
+  - POL-ESC-001
+- rank: 10
+  control_id: CTRL_RUNTIME_SANDBOX_ISOLATION
+  pillar: 3
+  description: Subprocess workload isolation with scrubbed env and real network egress
+    block
+  enabled: true
+  aggregate_risk_score: 55
+  max_threat_risk: 20
+  mitigated_threats:
+  - T07_TOOL_MISUSE_EXCESSIVE_AGENCY
+  - T08_CREDENTIAL_EXPOSURE
+  - T12_SUPPLY_CHAIN_MANIFEST
+  policy_ids:
+  - RT-ISO-001
+- rank: 11
+  control_id: CTRL_RATE_BUDGET_LIMITS
+  pillar: 2
+  description: Per-tool sliding-window rate limits and step/token consumption caps
+  enabled: true
+  aggregate_risk_score: 15
+  max_threat_risk: 15
+  mitigated_threats:
+  - T11_UNBOUNDED_CONSUMPTION
+  policy_ids:
+  - POL-RATE-001
+  - POL-BUD-001

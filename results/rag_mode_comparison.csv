@@ -1,0 +1,7 @@
+rag_mode,condition,t04_asr_mean_pct,t04_asr_ci95_pct,ben11_success_mean_pct,ben11_success_ci95_pct
+tfidf,C0,100.0,0.0,100.0,0.0
+tfidf,C4,50.0,0.0,100.0,0.0
+tfidf,C5_FULL,0.0,0.0,100.0,0.0
+dense,C0,100.0,0.0,100.0,0.0
+dense,C4,50.0,0.0,100.0,0.0
+dense,C5_FULL,0.0,0.0,100.0,0.0

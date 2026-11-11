@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools==80.9.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-cti"
+version = "0.1.0"
+description = "Reference implementation and experimental evaluation of the Four-Pillar CTI Blueprint for Autonomous AI Agents"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic==2.9.2",
+    "PyYAML==6.0.3",
+    "python-dotenv==1.0.1",
+    "cryptography==46.0.5",
+    "httpx==0.28.1",
+    "numpy==2.2.6",
+    "scipy==1.16.1",
+    "pandas==3.0.0",
+    "scikit-learn==1.7.1",
+    "matplotlib==3.10.3",
+    "seaborn==0.13.2",
+    "rich==14.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.4.2",
+    "pytest-cov==7.1.0",
+    "ruff==0.16.0",
+]
+dense-rag = [
+    "sentence-transformers==6.0.1",
+]
+
+[project.scripts]
+agent-cti = "agent_cti.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+

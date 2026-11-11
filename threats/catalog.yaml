@@ -1,0 +1,209 @@
+version: "1.0"
+framework_references:
+  owasp_llm_top10: "OWASP Top 10 for LLM Applications v2025"
+  owasp_agentic: "OWASP Agentic AI Threats & Mitigations (2025)"
+  mitre_atlas: "MITRE ATLAS (Adversarial Threat Landscape for Artificial-Intelligence Systems)"
+
+controls_registry:
+  CTRL_INPUT_INJECTION_FILTER:
+    pillar: 2
+    description: "Deterministic pre-input & peer-message prompt-injection and override filter"
+    policy_ids: ["POL-INP-001", "POL-INP-002"]
+  CTRL_POLICY_PROMPT_FRAMING:
+    pillar: 2
+    description: "Policy-based system prompt framing with untrusted-data boundary markers"
+    policy_ids: ["POL-PRM-001"]
+  CTRL_RETRIEVAL_SCREENING:
+    pillar: 2
+    description: "Pre-retrieval screening for untrusted/poisoned RAG chunks and embedded instructions"
+    policy_ids: ["POL-RET-001", "POL-RET-002"]
+  CTRL_TOOL_ALLOWLIST_ARGS:
+    pillar: 2
+    description: "Tool allowlist, untrusted manifest rejection, path/SQL/domain argument validation"
+    policy_ids: ["POL-TOOL-001", "POL-TOOL-002", "POL-TOOL-003", "POL-TOOL-004"]
+  CTRL_MEMORY_WRITE_GUARD:
+    pillar: 2
+    description: "Restrict persistent memory writes and require verified provenance"
+    policy_ids: ["POL-MEM-001"]
+  CTRL_SENSITIVE_OP_ESCALATION:
+    pillar: 2
+    description: "Escalate sensitive outbound actions (email, external HTTP POST, secret table queries)"
+    policy_ids: ["POL-ESC-001"]
+  CTRL_OUTPUT_DLP_SCHEMA:
+    pillar: 2
+    description: "Post-output deterministic canary/PII DLP filter and schema validation"
+    policy_ids: ["POL-OUT-001", "POL-OUT-002"]
+  CTRL_RATE_BUDGET_LIMITS:
+    pillar: 2
+    description: "Per-tool sliding-window rate limits and step/token consumption caps"
+    policy_ids: ["POL-RATE-001", "POL-BUD-001"]
+  CTRL_RUNTIME_IDENTITY_TOKENS:
+    pillar: 3
+    description: "Per-agent cryptographic identity verification and scoped short-lived capability tokens"
+    policy_ids: ["RT-ID-001", "RT-CAP-001"]
+  CTRL_RUNTIME_SANDBOX_ISOLATION:
+    pillar: 3
+    description: "Subprocess workload isolation with scrubbed env and real network egress block"
+    policy_ids: ["RT-ISO-001"]
+  CTRL_RUNTIME_ANOMALY_KILLSWITCH:
+    pillar: 3
+    description: "Behavioral sequence/loop anomaly detection, hash-chained audit log, and agent/tool kill switch"
+    policy_ids: ["RT-ANOM-001", "RT-KILL-001", "RT-LOG-001"]
+
+threats:
+  - id: T01_PROMPT_INJECTION_DIRECT
+    name: "Direct Prompt Injection"
+    category: "Prompt Injection"
+    description: "Adversarial user prompt instructs the agent to override system rules or leak secrets."
+    components: ["user_interactions", "models", "agents"]
+    impact: 5
+    likelihood: 5
+    owasp_llm: ["LLM01:2025"]
+    owasp_agentic: ["ASI-01-Goal-Hijack"]
+    mitre_atlas: ["AML.T0051.000"]
+    mapped_controls: ["CTRL_INPUT_INJECTION_FILTER", "CTRL_POLICY_PROMPT_FRAMING", "CTRL_OUTPUT_DLP_SCHEMA"]
+
+  - id: T02_PROMPT_INJECTION_INDIRECT
+    name: "Indirect Prompt Injection"
+    category: "Prompt Injection"
+    description: "Hidden directives inside fetched web fixtures, files, or emails hijack subsequent planning steps."
+    components: ["retrieval_systems", "tools", "models", "agents"]
+    impact: 5
+    likelihood: 5
+    owasp_llm: ["LLM01:2025"]
+    owasp_agentic: ["ASI-01-Goal-Hijack", "ASI-02-Tool-Misuse"]
+    mitre_atlas: ["AML.T0051.001"]
+    mapped_controls: ["CTRL_RETRIEVAL_SCREENING", "CTRL_POLICY_PROMPT_FRAMING", "CTRL_TOOL_ALLOWLIST_ARGS", "CTRL_RUNTIME_ANOMALY_KILLSWITCH"]
+
+  - id: T03_DATA_MODEL_POISONING
+    name: "Data / Model Poisoning"
+    category: "Data / Model Poisoning"
+    description: "Backdoor triggers or poisoned calibration data alter model behavior under specific phrases."
+    components: ["models", "data_pipelines"]
+    impact: 5
+    likelihood: 3
+    owasp_llm: ["LLM04:2025"]
+    owasp_agentic: ["ASI-06-Memory-Context-Poisoning"]
+    mitre_atlas: ["AML.T0020", "AML.T0018"]
+    mapped_controls: ["CTRL_OUTPUT_DLP_SCHEMA", "CTRL_TOOL_ALLOWLIST_ARGS", "CTRL_RUNTIME_ANOMALY_KILLSWITCH"]
+
+  - id: T04_RAG_RETRIEVAL_POISONING
+    name: "RAG / Retrieval Poisoning"
+    category: "Retrieval Manipulation"
+    description: "Untrusted documents injected into the vector store bias retrieved context or embed directives."
+    components: ["retrieval_systems", "data_pipelines", "models"]
+    impact: 4
+    likelihood: 4
+    owasp_llm: ["LLM08:2025", "LLM01:2025"]
+    owasp_agentic: ["ASI-06-Memory-Context-Poisoning"]
+    mitre_atlas: ["AML.T0051.001", "AML.T0048"]
+    mapped_controls: ["CTRL_RETRIEVAL_SCREENING", "CTRL_POLICY_PROMPT_FRAMING", "CTRL_OUTPUT_DLP_SCHEMA"]
+
+  - id: T05_MEMORY_POISONING
+    name: "Persistent Memory Poisoning"
+    category: "Memory Manipulation"
+    description: "Adversarial inputs cause the agent to persist fraudulent instructions or routing rules in memory."
+    components: ["agents", "memory", "data_pipelines"]
+    impact: 5
+    likelihood: 4
+    owasp_llm: ["LLM01:2025", "LLM06:2025"]
+    owasp_agentic: ["ASI-06-Memory-Context-Poisoning"]
+    mitre_atlas: ["AML.T0051", "AML.T0049"]
+    mapped_controls: ["CTRL_MEMORY_WRITE_GUARD", "CTRL_INPUT_INJECTION_FILTER", "CTRL_RUNTIME_ANOMALY_KILLSWITCH"]
+
+  - id: T06_GOAL_HIJACKING
+    name: "Agent Goal Hijacking"
+    category: "Autonomous Planning Hijack"
+    description: "Multi-step planning loop is redirected from benign goal to destructive SQL or data exfiltration."
+    components: ["agents", "models", "tools"]
+    impact: 5
+    likelihood: 4
+    owasp_llm: ["LLM01:2025", "LLM06:2025"]
+    owasp_agentic: ["ASI-01-Goal-Hijack"]
+    mitre_atlas: ["AML.T0051", "AML.T0054"]
+    mapped_controls: ["CTRL_TOOL_ALLOWLIST_ARGS", "CTRL_SENSITIVE_OP_ESCALATION", "CTRL_RUNTIME_ANOMALY_KILLSWITCH"]
+
+  - id: T07_TOOL_MISUSE_EXCESSIVE_AGENCY
+    name: "Tool Misuse / Excessive Agency"
+    category: "Excessive Agency"
+    description: "Agent invokes privileged or destructive tool operations (DROP TABLE, path escape, arbitrary email)."
+    components: ["tools", "agents"]
+    impact: 5
+    likelihood: 4
+    owasp_llm: ["LLM06:2025"]
+    owasp_agentic: ["ASI-02-Tool-Misuse"]
+    mitre_atlas: ["AML.T0053"]
+    mapped_controls: ["CTRL_TOOL_ALLOWLIST_ARGS", "CTRL_RUNTIME_IDENTITY_TOKENS", "CTRL_RUNTIME_SANDBOX_ISOLATION", "CTRL_SENSITIVE_OP_ESCALATION"]
+
+  - id: T08_CREDENTIAL_EXPOSURE
+    name: "Credential / Secret Exposure"
+    category: "Credential Exposure"
+    description: "Agent reads sensitive secrets files or credential tables and exposes tokens."
+    components: ["tools", "data_pipelines", "agents"]
+    impact: 5
+    likelihood: 4
+    owasp_llm: ["LLM02:2025"]
+    owasp_agentic: ["ASI-03-Identity-Privilege-Abuse"]
+    mitre_atlas: ["AML.T0055", "AML.T0025"]
+    mapped_controls: ["CTRL_TOOL_ALLOWLIST_ARGS", "CTRL_OUTPUT_DLP_SCHEMA", "CTRL_RUNTIME_SANDBOX_ISOLATION", "CTRL_RUNTIME_IDENTITY_TOKENS"]
+
+  - id: T09_AGENT_IDENTITY_CONFUSION
+    name: "Agent Identity Confusion"
+    category: "Identity & Privilege Abuse"
+    description: "Spoofed peer agent claims privileged role over inter-agent channel to trigger unauthorized actions."
+    components: ["agents", "agent_channel", "tools"]
+    impact: 5
+    likelihood: 4
+    owasp_llm: ["LLM06:2025"]
+    owasp_agentic: ["ASI-03-Identity-Privilege-Abuse", "ASI-07-Insecure-Inter-Agent-Comms"]
+    mitre_atlas: ["AML.T0051", "AML.T0053"]
+    mapped_controls: ["CTRL_RUNTIME_IDENTITY_TOKENS", "CTRL_INPUT_INJECTION_FILTER", "CTRL_TOOL_ALLOWLIST_ARGS"]
+
+  - id: T10_SENSITIVE_INFO_DISCLOSURE
+    name: "Sensitive Information Disclosure"
+    category: "Sensitive Information Disclosure"
+    description: "PII, SSNs, or canary API keys leak into final outputs or outbound email/HTTP payloads."
+    components: ["models", "tools", "user_interactions"]
+    impact: 5
+    likelihood: 4
+    owasp_llm: ["LLM02:2025"]
+    owasp_agentic: ["ASI-02-Tool-Misuse"]
+    mitre_atlas: ["AML.T0024", "AML.T0057"]
+    mapped_controls: ["CTRL_OUTPUT_DLP_SCHEMA", "CTRL_SENSITIVE_OP_ESCALATION", "CTRL_RUNTIME_ANOMALY_KILLSWITCH"]
+
+  - id: T11_UNBOUNDED_CONSUMPTION
+    name: "Unbounded Consumption / Tool Loops"
+    category: "Resource Exhaustion"
+    description: "Adversarial prompt induces infinite tool-call loops or token/rate exhaustion."
+    components: ["models", "agents", "tools"]
+    impact: 3
+    likelihood: 5
+    owasp_llm: ["LLM10:2025"]
+    owasp_agentic: ["ASI-08-Cascading-Failures"]
+    mitre_atlas: ["AML.T0029", "AML.T0034"]
+    mapped_controls: ["CTRL_RATE_BUDGET_LIMITS", "CTRL_RUNTIME_ANOMALY_KILLSWITCH"]
+
+  - id: T12_SUPPLY_CHAIN_MANIFEST
+    name: "Supply-Chain Malicious Tool / Plugin Manifest"
+    category: "Supply Chain"
+    description: "Untrusted or hash-tampered third-party plugin manifest registers and executes rogue commands."
+    components: ["tools", "data_pipelines", "agents"]
+    impact: 5
+    likelihood: 3
+    owasp_llm: ["LLM03:2025"]
+    owasp_agentic: ["ASI-04-Supply-Chain-Vulnerabilities"]
+    mitre_atlas: ["AML.T0010", "AML.T0053"]
+    mapped_controls: ["CTRL_TOOL_ALLOWLIST_ARGS", "CTRL_RUNTIME_IDENTITY_TOKENS", "CTRL_RUNTIME_SANDBOX_ISOLATION"]
+
+  - id: T13_MISINFORMATION_HALLUCINATION
+    name: "Misinformation / Unverified Hallucination"
+    category: "Misinformation"
+    description: "Agent fabricates authoritative policy claims or acts on unverified hallucinated parameters."
+    components: ["models", "retrieval_systems", "user_interactions"]
+    impact: 3
+    likelihood: 4
+    owasp_llm: ["LLM09:2025"]
+    owasp_agentic: ["ASI-09-Human-Agent-Trust-Exploitation"]
+    mitre_atlas: ["AML.T0048"]
+    mapped_controls: ["CTRL_OUTPUT_DLP_SCHEMA", "CTRL_POLICY_PROMPT_FRAMING"]
+

@@ -1,0 +1,11 @@
+component,probe,detected_or_blocked,baseline_ok
+AuditLedger,Payload byte modification,True,True
+AuditLedger,Middle entry deletion,True,True
+CapabilityAuthority,Single-use token replay,True,True
+CapabilityAuthority,Expired token reuse,True,True
+CapabilityAuthority,Out-of-scope path escalation,True,True
+IdentityRegistry,Unsigned spoofed admin message,True,True
+IdentityRegistry,Signed message payload tampering,True,True
+SubprocessSandbox,Direct TCP outbound socket,True,True
+SubprocessSandbox,Parent env secret inheritance,True,True
+SubprocessSandbox,Root-jail path traversal,True,True

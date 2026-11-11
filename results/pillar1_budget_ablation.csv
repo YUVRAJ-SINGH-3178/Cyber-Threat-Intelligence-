@@ -1,0 +1,16 @@
+budget_k,strategy,asr_mean_pct,asr_ci95_pct
+2,Pillar 1 Risk-Ranked,29.23,2.62
+2,Reverse-Risk,80.0,7.08
+2,Random Control Subset,58.46,19.52
+4,Pillar 1 Risk-Ranked,20.0,2.14
+4,Reverse-Risk,73.08,7.55
+4,Random Control Subset,38.46,26.59
+6,Pillar 1 Risk-Ranked,16.92,2.62
+6,Reverse-Risk,49.23,4.0
+6,Random Control Subset,29.23,9.9
+8,Pillar 1 Risk-Ranked,16.92,2.62
+8,Reverse-Risk,42.31,10.13
+8,Random Control Subset,20.0,4.0
+11,Pillar 1 Risk-Ranked,14.62,2.14
+11,Reverse-Risk,14.62,2.14
+11,Random Control Subset,14.62,2.14

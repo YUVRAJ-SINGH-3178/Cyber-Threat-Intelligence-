@@ -1,0 +1,59 @@
+version: '1.0'
+generated_from_findings:
+- FND-234F96
+- FND-736849
+- FND-1A2558
+- FND-CF51EB
+- FND-5FE199
+- FND-0DD2E6
+- FND-880BA2
+- FND-29A0CB
+settings_overrides: {}
+rules:
+- policy_id: POL-MEM-002
+  control_id: CTRL_MEMORY_WRITE_GUARD
+  checkpoint: pre_tool
+  kind: memory_guard
+  enabled: true
+  verdict: BLOCK
+  description: 'Pillar 4 Remediation: Block unverified payment_rail/IBAN/QA_HOLDING
+    memory mutations'
+  patterns:
+  - (?i)payment_rail
+  - (?i)iban
+  - (?i)qa_holding
+  - (?i)treasury_forwarding
+- policy_id: POL-RET-003
+  control_id: CTRL_RETRIEVAL_SCREENING
+  checkpoint: pre_retrieval
+  kind: retrieval_pattern_filter
+  enabled: true
+  verdict: ALLOW
+  description: 'Pillar 4 Remediation: Quarantine retrieval chunks containing AUDIT_EXEMPTION
+    bypasses'
+  patterns:
+  - 'AUDIT_EXEMPTION:'
+  - (?i)skip\s+verification\s+for\s+urgent\s+partner\s+payouts
+- policy_id: POL-OUT-003
+  control_id: CTRL_OUTPUT_DLP_SCHEMA
+  checkpoint: post_output
+  kind: output_schema_guard
+  enabled: true
+  verdict: BLOCK
+  description: 'Pillar 4 Remediation: Block QA_HOLDING_ACCT disbursement backdoor
+    output'
+  max_chars: 4000
+  forbidden_patterns:
+  - (?i)QA_HOLDING_ACCT
+- policy_id: POL-OUT-004
+  control_id: CTRL_OUTPUT_DLP_SCHEMA
+  checkpoint: post_output
+  kind: output_schema_guard
+  enabled: true
+  verdict: BLOCK
+  description: 'Pillar 4 Remediation: Block unverified Policy Appendix Z / zero-approval
+    hallucinations'
+  max_chars: 4000
+  forbidden_patterns:
+  - (?i)Policy\s+Appendix\s+Z
+  - (?i)zero-approval\s+disbursements
