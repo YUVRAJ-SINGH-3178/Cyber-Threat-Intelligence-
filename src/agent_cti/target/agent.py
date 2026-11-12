@@ -275,11 +275,12 @@ class TargetAgent:
                     tokens_used=llm_resp.total_tokens,
                 )
             )
-            messages.append(LLMMessage(role="assistant", content=llm_resp.content))
+            messages.append(LLMMessage(role="assistant", content=llm_resp.content, tool_calls=[tc]))
             messages.append(
                 LLMMessage(
                     role="tool",
                     name=tc.tool_name,
+                    tool_call_id=tc.call_id,
                     content=tool_res.output if tool_res.success else f"ERROR: {tool_res.error}",
                 )
             )

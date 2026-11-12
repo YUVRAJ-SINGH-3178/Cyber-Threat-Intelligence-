@@ -6,6 +6,8 @@ import json
 import os
 import random
 import re
+import time
+import uuid
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -13,15 +15,18 @@ import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class ToolCallRequest(BaseModel):
+    tool_name: str
+    arguments: dict[str, Any] = Field(default_factory=dict)
+    call_id: str | None = None
+
+
 class LLMMessage(BaseModel):
     role: str  # system | user | assistant | tool
     content: str
     name: str | None = None
-
-
-class ToolCallRequest(BaseModel):
-    tool_name: str
-    arguments: dict[str, Any] = Field(default_factory=dict)
+    tool_calls: list[ToolCallRequest] = Field(default_factory=list)
+    tool_call_id: str | None = None
 
 
 class LLMResponse(BaseModel):
@@ -753,14 +758,98 @@ class OpenAICompatibleBackend(LLMBackend):
         api_key: str | None = None,
         base_url: str | None = None,
         model: str | None = None,
+        seed: int | None = None,
         timeout_s: float = 30.0,
+        max_retries: int = 5,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
         self.api_key = api_key or os.getenv("OPENAI_API_KEY", "")
         self.base_url = (base_url or os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")).rstrip("/")
         self.model = model or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+        self.seed = seed
         self.timeout_s = timeout_s
+        self.max_retries = max_retries
         self._transport = transport
+
+    @staticmethod
+    def _to_openai_tools(tools: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        formatted: list[dict[str, Any]] = []
+        optional_params = {"http_fetch": {"method", "body"}, "send_email": {"subject"}}
+        for t in tools:
+            if t.get("type") == "function" and "function" in t:
+                formatted.append(t)
+                continue
+            name = str(t["name"])
+            raw_params = dict(t.get("parameters") or {})
+            props = {
+                pname: {"type": str(ptype) if ptype in ("string", "integer", "number", "boolean") else "string"}
+                for pname, ptype in raw_params.items()
+            }
+            opt = optional_params.get(name, set())
+            req = [k for k in raw_params if k not in opt]
+            formatted.append(
+                {
+                    "type": "function",
+                    "function": {
+                        "name": name,
+                        "description": str(t.get("description", "")),
+                        "parameters": {
+                            "type": "object",
+                            "properties": props,
+                            "required": req,
+                        },
+                    },
+                }
+            )
+        return formatted
+
+    @staticmethod
+    def _to_openai_messages(messages: list[LLMMessage]) -> list[dict[str, Any]]:
+        out: list[dict[str, Any]] = []
+        last_call_ids: dict[str, str] = {}
+        for idx, m in enumerate(messages):
+            if m.role == "assistant" and m.tool_calls:
+                serialized_calls = []
+                for j, tc in enumerate(m.tool_calls):
+                    cid = tc.call_id or f"call_{idx}_{j}"
+                    last_call_ids[tc.tool_name] = cid
+                    serialized_calls.append(
+                        {
+                            "id": cid,
+                            "type": "function",
+                            "function": {
+                                "name": tc.tool_name,
+                                "arguments": json.dumps(tc.arguments),
+                            },
+                        }
+                    )
+                out.append(
+                    {
+                        "role": "assistant",
+                        "content": m.content or None,
+                        "tool_calls": serialized_calls,
+                    }
+                )
+            elif m.role == "tool":
+                cid = m.tool_call_id or (last_call_ids.get(m.name or "") if m.name else None) or f"call_fallback_{idx}"
+                out.append({"role": "tool", "tool_call_id": cid, "content": m.content})
+            else:
+                out.append({"role": m.role, "content": m.content})
+        return out
+
+    @staticmethod
+    def _parse_failed_tool_generation(failed_gen: str) -> list[ToolCallRequest]:
+        """Recover tool calls when Llama/Groq emits `<function=name>{...}</function>` in 400 failed_generation."""
+        calls: list[ToolCallRequest] = []
+        for match in re.finditer(r"<function=([A-Za-z0-9_.-]+)>\s*(\{.*?\})\s*</function>", failed_gen, flags=re.DOTALL):
+            fname, raw_json = match.group(1), match.group(2)
+            try:
+                args = json.loads(raw_json)
+            except json.JSONDecodeError:
+                args = {}
+            if isinstance(args, dict):
+                calls.append(ToolCallRequest(tool_name=fname, arguments=args, call_id=f"call_{uuid.uuid4().hex[:8]}"))
+        return calls
 
     def generate(
         self,
@@ -769,25 +858,56 @@ class OpenAICompatibleBackend(LLMBackend):
         step_idx: int = 0,
     ) -> LLMResponse:
         if not self.api_key and "127.0.0.1" not in self.base_url and "localhost" not in self.base_url:
-            raise RuntimeError("Missing API key for OpenAI-compatible backend. Set OPENAI_API_KEY in .env.")
+            raise RuntimeError("Missing API key for OpenAI-compatible backend. Set OPENAI_API_KEY / GROQ_API_KEY in .env.")
 
         payload: dict[str, Any] = {
             "model": self.model,
-            "messages": [{"role": m.role, "content": m.content} for m in messages],
+            "messages": self._to_openai_messages(messages),
             "temperature": 0.2,
+            "max_tokens": 512,
         }
+        if self.seed is not None:
+            payload["seed"] = self.seed
         if tools:
-            payload["tools"] = tools
+            payload["tools"] = self._to_openai_tools(tools)
+            payload["tool_choice"] = "auto"
 
         headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
 
+        data: dict[str, Any] | None = None
         with httpx.Client(timeout=self.timeout_s, transport=self._transport) as client:
-            resp = client.post(f"{self.base_url}/chat/completions", json=payload, headers=headers)
-            resp.raise_for_status()
-            data = resp.json()
+            for attempt in range(self.max_retries):
+                resp = client.post(f"{self.base_url}/chat/completions", json=payload, headers=headers)
+                if resp.status_code in (429, 503) and attempt < self.max_retries - 1:
+                    retry_after = float(resp.headers.get("retry-after", "0") or 0)
+                    delay = max(retry_after, min(15.0, 1.5 * (2**attempt)))
+                    time.sleep(delay)
+                    continue
+                if resp.status_code == 400:
+                    err_body = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
+                    err_info = err_body.get("error", {}) if isinstance(err_body, dict) else {}
+                    if err_info.get("code") == "tool_use_failed" and err_info.get("failed_generation"):
+                        recovered = self._parse_failed_tool_generation(str(err_info["failed_generation"]))
+                        if recovered:
+                            return LLMResponse(
+                                content="",
+                                tool_calls=recovered,
+                                prompt_tokens=sum(_approx_tokens(m.content) for m in messages),
+                                completion_tokens=24,
+                                model_name=self.model,
+                                finish_reason="tool_calls",
+                            )
+                        # Fall back to plain text generation without tool schema if malformed
+                        payload.pop("tools", None)
+                        payload.pop("tool_choice", None)
+                        continue
+                resp.raise_for_status()
+                data = resp.json()
+                break
 
+        assert data is not None
         choice = data["choices"][0]
         msg = choice["message"]
         parsed_calls: list[ToolCallRequest] = []
@@ -795,7 +915,13 @@ class OpenAICompatibleBackend(LLMBackend):
             fn = tc.get("function", {})
             raw_args = fn.get("arguments", "{}")
             args = json.loads(raw_args) if isinstance(raw_args, str) else raw_args
-            parsed_calls.append(ToolCallRequest(tool_name=fn["name"], arguments=args))
+            parsed_calls.append(
+                ToolCallRequest(
+                    tool_name=fn["name"],
+                    arguments=args if isinstance(args, dict) else {},
+                    call_id=tc.get("id"),
+                )
+            )
 
         usage = data.get("usage", {})
         return LLMResponse(
@@ -971,12 +1097,13 @@ def create_llm_backend(backend_name: str, seed: int = 42) -> LLMBackend:
     if key == "mock_stochastic":
         return StochasticMockLLM(seed=seed)
     if key == "openai":
-        return OpenAICompatibleBackend()
+        return OpenAICompatibleBackend(seed=seed)
     if key == "groq":
         return OpenAICompatibleBackend(
             api_key=os.getenv("GROQ_API_KEY", ""),
             base_url="https://api.groq.com/openai/v1",
-            model=os.getenv("GROQ_MODEL", "llama-3.1-8b-instant"),
+            model=os.getenv("GROQ_MODEL", "openai/gpt-oss-20b"),
+            seed=seed,
         )
     if key == "ollama":
         base = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
@@ -984,6 +1111,7 @@ def create_llm_backend(backend_name: str, seed: int = 42) -> LLMBackend:
             api_key="ollama",
             base_url=f"{base}/v1",
             model=os.getenv("OLLAMA_MODEL", "llama3.2:3b"),
+            seed=seed,
         )
     if key == "gemini":
         return GeminiBackend()
