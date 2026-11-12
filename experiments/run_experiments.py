@@ -132,6 +132,7 @@ def _run_condition_matrix(
 
         c4_findings = None
         for cond in CONDITIONS:
+            print(f"[{backend_name}] Seed {seed} -> Condition {cond} ({num_variants} variant(s)/scenario)...", flush=True)
             if cond == "C5" and c4_findings is not None:
                 FeedbackEngine().apply(
                     findings=c4_findings,
@@ -757,11 +758,18 @@ def _export_tables(summary_df: pd.DataFrame, hold_df: pd.DataFrame, results_dir:
     _write_pair(hold_df, "holdout_table", "Unseen Holdout Generalization and Hard Dual-Use Benign Utility (5 Seeds, Mean $\\pm$ 95\\% CI)")
 
 
-def run_all(backend: str = "all", num_variants: int = 2) -> None:
+def run_all(backend: str = "all", num_variants: int = 2, num_seeds: int | None = None) -> None:
     repo = find_repo_root()
     cfg = load_config()
     results_dir = repo / "results"
     results_dir.mkdir(parents=True, exist_ok=True)
+
+    if num_seeds is not None:
+        target_seeds = SEEDS[:num_seeds]
+    elif backend not in ("all", "mock_deterministic", "mock_stochastic"):
+        target_seeds = SEEDS[:1]
+    else:
+        target_seeds = SEEDS
 
     if backend in ("all", "mock_deterministic"):
         df_det = _run_condition_matrix(
@@ -779,7 +787,7 @@ def run_all(backend: str = "all", num_variants: int = 2) -> None:
         df_sto = _run_condition_matrix(
             cfg=cfg,
             backend_name="mock_stochastic",
-            seeds=SEEDS,
+            seeds=target_seeds,
             num_variants=num_variants,
             use_sandbox_for_runtime=True,
             results_dir=results_dir,
@@ -793,7 +801,7 @@ def run_all(backend: str = "all", num_variants: int = 2) -> None:
         df_hold = _run_holdout_matrix(
             cfg=cfg,
             backend_name="mock_stochastic",
-            seeds=SEEDS,
+            seeds=target_seeds,
             num_variants=num_variants,
             results_dir=results_dir,
         )
@@ -810,11 +818,12 @@ def run_all(backend: str = "all", num_variants: int = 2) -> None:
         _run_pillar3_security_probes().to_csv(results_dir / "pillar3_security_probes.csv", index=False)
 
     elif backend not in ("all", "mock_deterministic", "mock_stochastic"):
+        print(f"Running evaluation matrix for backend '{backend}' (seeds={target_seeds}, variants={num_variants})...", flush=True)
         df_real = _run_condition_matrix(
             cfg=cfg,
             backend_name=backend,
-            seeds=SEEDS[:3],
-            num_variants=1,
+            seeds=target_seeds,
+            num_variants=num_variants,
             use_sandbox_for_runtime=True,
             results_dir=results_dir,
         )
@@ -822,7 +831,7 @@ def run_all(backend: str = "all", num_variants: int = 2) -> None:
         sum_df = _summarize_ablation(df_real)
         sum_df.to_csv(results_dir / f"summary_ablation_{backend}.csv", index=False)
 
-    load_df = _run_load_scaling(cfg, seeds=SEEDS, results_dir=results_dir)
+    load_df = _run_load_scaling(cfg, seeds=target_seeds, results_dir=results_dir)
     load_df.to_csv(results_dir / "load_scaling_hitl_vs_auto.csv", index=False)
     print(f"Experiments completed. CSV artifacts saved in {results_dir}")
 
@@ -831,8 +840,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run Four-Pillar CTI experiments")
     parser.add_argument("--backend", default="all", help="all | mock_deterministic | mock_stochastic | openai | gemini | anthropic | groq | ollama")
     parser.add_argument("--variants", type=int, default=2, help="Number of seeded attack prompt variants per scenario")
+    parser.add_argument("--seeds", type=int, default=None, help="Number of seeds to run (default: 1 for remote API backends, all for offline)")
     args = parser.parse_args()
-    run_all(backend=args.backend, num_variants=args.variants)
+    run_all(backend=args.backend, num_variants=args.variants, num_seeds=args.seeds)
     return 0
 
 

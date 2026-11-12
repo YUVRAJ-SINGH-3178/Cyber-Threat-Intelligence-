@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import random
 import re
@@ -13,6 +14,37 @@ from typing import Any
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
+
+logger = logging.getLogger(__name__)
+
+
+def _parse_retry_delay(resp: httpx.Response, attempt: int) -> float:
+    """Extract backoff delay from rate-limit response headers or error body."""
+    for header_name in ("x-ratelimit-reset-tokens", "x-ratelimit-reset-requests"):
+        val = resp.headers.get(header_name, "").strip()
+        if val:
+            m = re.search(r"([\d.]+)\s*s?", val)
+            if m:
+                try:
+                    return float(m.group(1)) + 1.0
+                except ValueError:
+                    pass
+    ra = resp.headers.get("retry-after", "").strip()
+    if ra:
+        try:
+            return float(ra) + 1.0
+        except ValueError:
+            pass
+    try:
+        body = resp.json()
+        if isinstance(body, dict):
+            msg = str(body.get("error", {}).get("message", ""))
+            m = re.search(r"try again in ([\d.]+)s", msg)
+            if m:
+                return float(m.group(1)) + 1.0
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+        logger.debug("Could not parse rate-limit reset delay from response body.")
+    return max(4.0, min(60.0, 2.0 * (2**attempt)))
 
 
 class ToolCallRequest(BaseModel):
@@ -759,8 +791,8 @@ class OpenAICompatibleBackend(LLMBackend):
         base_url: str | None = None,
         model: str | None = None,
         seed: int | None = None,
-        timeout_s: float = 30.0,
-        max_retries: int = 5,
+        timeout_s: float = 60.0,
+        max_retries: int = 8,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
         self.api_key = api_key or os.getenv("OPENAI_API_KEY", "")
@@ -877,47 +909,93 @@ class OpenAICompatibleBackend(LLMBackend):
             headers["Authorization"] = f"Bearer {self.api_key}"
 
         data: dict[str, Any] | None = None
-        with httpx.Client(timeout=self.timeout_s, transport=self._transport) as client:
-            for attempt in range(self.max_retries):
-                resp = client.post(f"{self.base_url}/chat/completions", json=payload, headers=headers)
-                if resp.status_code in (429, 503) and attempt < self.max_retries - 1:
-                    retry_after = float(resp.headers.get("retry-after", "0") or 0)
-                    delay = max(retry_after, min(15.0, 1.5 * (2**attempt)))
+        for attempt in range(self.max_retries):
+            try:
+                with httpx.Client(
+                    timeout=self.timeout_s,
+                    transport=self._transport,
+                    limits=httpx.Limits(max_keepalive_connections=5, max_connections=10, keepalive_expiry=10.0),
+                ) as client:
+                    resp = client.post(f"{self.base_url}/chat/completions", json=payload, headers=headers)
+            except (httpx.TransportError, httpx.TimeoutException) as exc:
+                if attempt < self.max_retries - 1:
+                    delay = max(3.0, min(30.0, 2.0 * (1.8**attempt)))
+                    logger.warning(
+                        "[OpenAICompatibleBackend] Network transport error: %s. Retrying in %.1fs (attempt %d/%d)...",
+                        exc,
+                        delay,
+                        attempt + 1,
+                        self.max_retries,
+                    )
                     time.sleep(delay)
                     continue
-                if resp.status_code == 400:
-                    err_body = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
-                    err_info = err_body.get("error", {}) if isinstance(err_body, dict) else {}
-                    if err_info.get("code") == "tool_use_failed" and err_info.get("failed_generation"):
-                        recovered = self._parse_failed_tool_generation(str(err_info["failed_generation"]))
-                        if recovered:
-                            return LLMResponse(
-                                content="",
-                                tool_calls=recovered,
-                                prompt_tokens=sum(_approx_tokens(m.content) for m in messages),
-                                completion_tokens=24,
-                                model_name=self.model,
-                                finish_reason="tool_calls",
-                            )
-                        # Fall back to plain text generation without tool schema if malformed
-                        payload.pop("tools", None)
-                        payload.pop("tool_choice", None)
-                        continue
-                resp.raise_for_status()
-                data = resp.json()
-                break
+                raise
 
-        assert data is not None
+            if resp.status_code in (429, 503):
+                if attempt < self.max_retries - 1:
+                    delay = _parse_retry_delay(resp, attempt)
+                    logger.warning(
+                        "[OpenAICompatibleBackend] HTTP %d from %s. Retrying in %.1fs (attempt %d/%d)...",
+                        resp.status_code,
+                        self.base_url,
+                        delay,
+                        attempt + 1,
+                        self.max_retries,
+                    )
+                    time.sleep(delay)
+                    continue
+                resp.raise_for_status()
+
+            if resp.status_code == 400:
+                err_body = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
+                err_info = err_body.get("error", {}) if isinstance(err_body, dict) else {}
+                if err_info.get("code") == "tool_use_failed" and err_info.get("failed_generation"):
+                    recovered = self._parse_failed_tool_generation(str(err_info["failed_generation"]))
+                    if recovered:
+                        return LLMResponse(
+                            content="",
+                            tool_calls=recovered,
+                            prompt_tokens=sum(_approx_tokens(m.content) for m in messages),
+                            completion_tokens=24,
+                            model_name=self.model,
+                            finish_reason="tool_calls",
+                        )
+                    # Fall back to plain text generation without tool schema if malformed
+                    payload.pop("tools", None)
+                    payload.pop("tool_choice", None)
+                    continue
+
+            resp.raise_for_status()
+            data = resp.json()
+
+            # Proactive rate-limit pacing if token quota is nearly depleted (< 1500 tokens remaining)
+            rem_tokens_str = resp.headers.get("x-ratelimit-remaining-tokens", "")
+            if rem_tokens_str and rem_tokens_str.isdigit() and int(rem_tokens_str) < 1500:
+                reset_str = resp.headers.get("x-ratelimit-reset-tokens", "")
+                m = re.search(r"([\d.]+)\s*s?", reset_str)
+                pace_s = float(m.group(1)) + 0.5 if m else 3.0
+                time.sleep(min(15.0, pace_s))
+            else:
+                time.sleep(0.25)
+            break
+
+        assert data is not None, "Failed to retrieve LLM response after retries."
         choice = data["choices"][0]
         msg = choice["message"]
         parsed_calls: list[ToolCallRequest] = []
         for tc in msg.get("tool_calls") or []:
             fn = tc.get("function", {})
             raw_args = fn.get("arguments", "{}")
-            args = json.loads(raw_args) if isinstance(raw_args, str) else raw_args
+            if isinstance(raw_args, str):
+                try:
+                    args = json.loads(raw_args)
+                except json.JSONDecodeError:
+                    args = {"raw": raw_args}
+            else:
+                args = raw_args
             parsed_calls.append(
                 ToolCallRequest(
-                    tool_name=fn["name"],
+                    tool_name=fn.get("name", "unknown"),
                     arguments=args if isinstance(args, dict) else {},
                     call_id=tc.get("id"),
                 )
@@ -943,12 +1021,14 @@ class GeminiBackend(LLMBackend):
         self,
         api_key: str | None = None,
         model: str | None = None,
-        timeout_s: float = 30.0,
+        timeout_s: float = 60.0,
+        max_retries: int = 5,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
         self.api_key = api_key or os.getenv("GEMINI_API_KEY", "")
         self.model = model or os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
         self.timeout_s = timeout_s
+        self.max_retries = max_retries
         self._transport = transport
 
     def generate(
@@ -974,11 +1054,30 @@ class GeminiBackend(LLMBackend):
             payload["system_instruction"] = {"parts": system_parts}
 
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
-        with httpx.Client(timeout=self.timeout_s, transport=self._transport) as client:
-            resp = client.post(url, params={"key": self.api_key}, json=payload)
+        data: dict[str, Any] | None = None
+        for attempt in range(self.max_retries):
+            try:
+                with httpx.Client(timeout=self.timeout_s, transport=self._transport) as client:
+                    resp = client.post(url, params={"key": self.api_key}, json=payload)
+            except (httpx.TransportError, httpx.TimeoutException) as exc:
+                if attempt < self.max_retries - 1:
+                    delay = max(3.0, min(30.0, 2.0 * (1.8**attempt)))
+                    logger.warning("[GeminiBackend] Transport error %s. Retrying in %.1fs...", exc, delay)
+                    time.sleep(delay)
+                    continue
+                raise
+            if resp.status_code in (429, 503):
+                if attempt < self.max_retries - 1:
+                    delay = _parse_retry_delay(resp, attempt)
+                    time.sleep(delay)
+                    continue
+                resp.raise_for_status()
             resp.raise_for_status()
             data = resp.json()
+            time.sleep(0.25)
+            break
 
+        assert data is not None, "Failed to retrieve Gemini response."
         cand = data["candidates"][0]
         parts = cand.get("content", {}).get("parts", [])
         text = "\n".join(p.get("text", "") for p in parts if "text" in p)
@@ -1001,12 +1100,14 @@ class AnthropicBackend(LLMBackend):
         self,
         api_key: str | None = None,
         model: str | None = None,
-        timeout_s: float = 30.0,
+        timeout_s: float = 60.0,
+        max_retries: int = 5,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
         self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY", "")
         self.model = model or os.getenv("ANTHROPIC_MODEL", "claude-3-5-haiku-latest")
         self.timeout_s = timeout_s
+        self.max_retries = max_retries
         self._transport = transport
 
     def generate(
@@ -1037,11 +1138,30 @@ class AnthropicBackend(LLMBackend):
             "anthropic-version": "2023-06-01",
             "content-type": "application/json",
         }
-        with httpx.Client(timeout=self.timeout_s, transport=self._transport) as client:
-            resp = client.post("https://api.anthropic.com/v1/messages", json=payload, headers=headers)
+        data: dict[str, Any] | None = None
+        for attempt in range(self.max_retries):
+            try:
+                with httpx.Client(timeout=self.timeout_s, transport=self._transport) as client:
+                    resp = client.post("https://api.anthropic.com/v1/messages", json=payload, headers=headers)
+            except (httpx.TransportError, httpx.TimeoutException) as exc:
+                if attempt < self.max_retries - 1:
+                    delay = max(3.0, min(30.0, 2.0 * (1.8**attempt)))
+                    logger.warning("[AnthropicBackend] Transport error %s. Retrying in %.1fs...", exc, delay)
+                    time.sleep(delay)
+                    continue
+                raise
+            if resp.status_code in (429, 503):
+                if attempt < self.max_retries - 1:
+                    delay = _parse_retry_delay(resp, attempt)
+                    time.sleep(delay)
+                    continue
+                resp.raise_for_status()
             resp.raise_for_status()
             data = resp.json()
+            time.sleep(0.25)
+            break
 
+        assert data is not None, "Failed to retrieve Anthropic response."
         text = "\n".join(b.get("text", "") for b in data.get("content", []) if b.get("type") == "text")
         usage = data.get("usage", {})
         return LLMResponse(
