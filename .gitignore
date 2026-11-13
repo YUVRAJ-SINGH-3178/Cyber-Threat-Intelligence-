@@ -11,4 +11,6 @@ build/
 dist/
 results/logs/
 results/artifacts/
+results/ui_ledger_demo/
+results/ui_simulations/
 

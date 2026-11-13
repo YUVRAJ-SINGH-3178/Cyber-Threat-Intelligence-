@@ -6,7 +6,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parent
 
 
@@ -16,8 +15,8 @@ def _run(cmd: list[str]) -> int:
 
 
 def main() -> int:
-    if len(sys.argv) < 2 or sys.argv[1] not in ("setup", "test", "run-experiments", "make-figures"):
-        print("Usage: python manage.py <setup|test|run-experiments|make-figures>")
+    if len(sys.argv) < 2 or sys.argv[1] not in ("setup", "test", "run-experiments", "make-figures", "ui"):
+        print("Usage: python manage.py <setup|test|run-experiments|make-figures|ui>")
         return 2
 
     cmd = sys.argv[1]
@@ -32,6 +31,10 @@ def main() -> int:
         return _run([sys.executable, str(ROOT / "experiments" / "run_experiments.py"), *sys.argv[2:]])
     if cmd == "make-figures":
         return _run([sys.executable, str(ROOT / "experiments" / "make_figures.py")])
+    if cmd == "ui":
+        port = 8000
+        print(f"Starting Modern Cyber Threat Intelligence Web UI at http://127.0.0.1:{port} ...")
+        return _run([sys.executable, "-m", "uvicorn", "ui.server:app", "--host", "127.0.0.1", "--port", str(port)])
     return 1
 
 
