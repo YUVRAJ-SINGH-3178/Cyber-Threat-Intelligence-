@@ -17,6 +17,7 @@ from pydantic import BaseModel
 
 from agent_cti.assurance.oracles import evaluate_attack_oracle
 from agent_cti.config import load_config
+from agent_cti.hitl import SimulatedHumanApprover
 from agent_cti.pipeline import build_defense_environment
 from agent_cti.runtime.audit import AuditLedger, verify_audit_log
 from agent_cti.target.bus import AgentMessage
@@ -60,7 +61,11 @@ def index() -> HTMLResponse:
     index_path = STATIC_DIR / "index.html"
     if not index_path.exists():
         raise HTTPException(status_code=404, detail="index.html not found")
-    return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
+    resp = HTMLResponse(content=index_path.read_text(encoding="utf-8"))
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
 
 
 @app.get("/api/overview")
@@ -151,6 +156,101 @@ def get_stats() -> list[dict[str, Any]]:
     return _read_csv("statistical_tests.csv")
 
 
+@app.get("/api/pillar1-budget")
+def get_pillar1_budget() -> list[dict[str, Any]]:
+    return _read_csv("pillar1_budget_ablation.csv")
+
+
+@app.get("/api/pillar3-probes")
+def get_pillar3_probes() -> list[dict[str, Any]]:
+    return _read_csv("pillar3_security_probes.csv")
+
+
+@app.get("/api/rag-comparison")
+def get_rag_comparison() -> list[dict[str, Any]]:
+    return _read_csv("rag_mode_comparison.csv")
+
+
+@app.get("/api/raw-trials")
+def get_raw_trials(
+    condition: str | None = None,
+    kind: str | None = None,
+    threat_id: str | None = None,
+    search: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> dict[str, Any]:
+    rows = _read_csv("raw_trials_stochastic.csv")
+    if condition and condition != "ALL":
+        rows = [r for r in rows if r.get("condition") == condition]
+    if kind and kind != "ALL":
+        rows = [r for r in rows if r.get("kind") == kind]
+    if threat_id and threat_id != "ALL":
+        rows = [r for r in rows if r.get("threat_id") == threat_id]
+    if search:
+        s_lower = search.lower().strip()
+        rows = [
+            r
+            for r in rows
+            if s_lower in r.get("scenario_id", "").lower()
+            or s_lower in r.get("threat_id", "").lower()
+            or s_lower in r.get("oracle_reason", "").lower()
+            or s_lower in r.get("variant_id", "").lower()
+        ]
+    total_count = len(rows)
+    sliced = rows[offset : offset + limit]
+    return {
+        "total": total_count,
+        "offset": offset,
+        "limit": limit,
+        "trials": sliced,
+    }
+
+
+@app.get("/api/datasets-list")
+def list_all_datasets() -> list[dict[str, Any]]:
+    return [
+        {"name": "summary_ablation.csv", "desc": "Main empirical ablation matrix across 5 seeds (N=520 trials)", "size_kb": 1.05},
+        {"name": "summary_ablation_deterministic.csv", "desc": "Deterministic baseline condition ablation matrix", "size_kb": 1.00},
+        {"name": "holdout_ablation.csv", "desc": "Zero-leakage unseen holdout test suite results (26 unseen attacks)", "size_kb": 0.86},
+        {"name": "load_scaling_hitl_vs_auto.csv", "desc": "HITL vs Continuous defense queueing & fatigue scaling", "size_kb": 2.70},
+        {"name": "per_threat_asr.csv", "desc": "Per-threat breakdown across 13 threat classes", "size_kb": 3.43},
+        {"name": "pillar1_budget_ablation.csv", "desc": "Pillar 1 risk-ranked vs random control allocation under constrained budget", "size_kb": 0.54},
+        {"name": "pillar3_security_probes.csv", "desc": "Pillar 3 runtime security invariants & adversarial probes", "size_kb": 0.60},
+        {"name": "rag_mode_comparison.csv", "desc": "RAG architecture comparison (TF-IDF vs Dense all-MiniLM-L6-v2)", "size_kb": 0.28},
+        {"name": "statistical_tests.csv", "desc": "Paired two-tailed t-tests and Cohen's d effect sizes", "size_kb": 0.79},
+        {"name": "raw_trials_stochastic.csv", "desc": "Complete raw trial execution records (1,950+ trials)", "size_kb": 375.6},
+        {"name": "raw_holdout_stochastic.csv", "desc": "Raw holdout trial execution records (1,000+ trials)", "size_kb": 232.1},
+    ]
+
+
+@app.get("/api/download-dataset/{filename}")
+def download_dataset(filename: str) -> FileResponse:
+    allowed = {
+        "summary_ablation.csv",
+        "summary_ablation_deterministic.csv",
+        "holdout_ablation.csv",
+        "load_scaling_hitl_vs_auto.csv",
+        "per_threat_asr.csv",
+        "pillar1_budget_ablation.csv",
+        "pillar3_security_probes.csv",
+        "rag_mode_comparison.csv",
+        "statistical_tests.csv",
+        "raw_trials_stochastic.csv",
+        "raw_holdout_stochastic.csv",
+    }
+    if filename not in allowed:
+        raise HTTPException(status_code=403, detail="Invalid dataset request")
+    file_path = ROOT / "results" / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Dataset file not found")
+    return FileResponse(
+        path=str(file_path),
+        filename=filename,
+        media_type="text/csv",
+    )
+
+
 @app.get("/api/figures")
 def get_figures() -> list[dict[str, Any]]:
     figs = [
@@ -234,6 +334,7 @@ def run_simulation(req: SimulationRequest) -> dict[str, Any]:
     enable_guardrails = cond in ("C2", "C4", "C5")
     enable_runtime = cond in ("C3", "C4", "C5")
     use_remediation = cond == "C5"
+    hitl = SimulatedHumanApprover(simulated_queue_depth=0, seed=42) if cond == "C1" else None
 
     bundle = build_defense_environment(
         cfg=cfg,
@@ -241,6 +342,7 @@ def run_simulation(req: SimulationRequest) -> dict[str, Any]:
         enable_guardrails=enable_guardrails,
         enable_runtime=enable_runtime,
         use_remediation=use_remediation,
+        hitl_approver=hitl,
         use_sandbox=False,
     )
     agent = bundle["agent"]
@@ -289,6 +391,53 @@ def run_simulation(req: SimulationRequest) -> dict[str, Any]:
     v_res = verify_audit_log(audit.log_path) if (enable_runtime and audit) else None
     verification = {"valid": v_res.valid, "count": v_res.entries_checked} if v_res else {"valid": True, "count": 0}
 
+    trace_steps_data: list[dict[str, Any]] = []
+    if len(trace.steps) == 0 and trace.defense_decisions:
+        for idx, dec in enumerate(trace.defense_decisions):
+            v = dec.get("verdict", "BLOCK")
+            cp = dec.get("checkpoint", "pre_input")
+            trace_steps_data.append({
+                "step_idx": idx,
+                "tool_call": {
+                    "tool": f"Security Boundary ({cp})",
+                    "arguments": {
+                        "checkpoint": cp,
+                        "control_id": dec.get("control_id") or "INGRESS_FILTER",
+                    },
+                },
+                "tool_result": {
+                    "success": v == "ALLOW",
+                    "output": f"Interceptor Verdict: {v}",
+                    "error": dec.get("reason"),
+                },
+                "interceptor_verdict": v,
+                "policy_id": dec.get("policy_id") or "POL-INP-001",
+                "reason": dec.get("reason", "Prompt rejected at ingestion boundary"),
+            })
+    else:
+        for s in trace.steps:
+            trace_steps_data.append({
+                "step_idx": s.step_idx,
+                "tool_call": {
+                    "tool": s.tool_call.tool_name if s.tool_call else "LLM Completion",
+                    "arguments": s.tool_call.arguments if s.tool_call else {},
+                }
+                if s.tool_call
+                else None,
+                "tool_result": {
+                    "success": s.tool_result.success,
+                    "output": s.tool_result.output[:300] if s.tool_result else "",
+                    "error": s.tool_result.error,
+                }
+                if s.tool_result
+                else None,
+                "interceptor_verdict": s.decision or "ALLOW",
+                "policy_id": s.policy_id or "NONE",
+                "reason": s.assistant_thought,
+            })
+
+    steps_count = len(trace.steps) if len(trace.steps) > 0 else (len(trace_steps_data) if attack_blocked else 0)
+
     return {
         "status": "success",
         "scenario": {
@@ -303,31 +452,10 @@ def run_simulation(req: SimulationRequest) -> dict[str, Any]:
         "attack_blocked": attack_blocked,
         "defense_outcome": "BLOCKED" if attack_blocked else ("SUCCESSFUL_ATTACK" if oracle.success else "NEUTRAL"),
         "oracle_reason": oracle.reason,
-        "steps_executed": len(trace.steps),
+        "steps_executed": steps_count,
         "decisions": trace.defense_decisions,
         "audit_verification": verification,
-        "trace_steps": [
-            {
-                "step_idx": s.step_idx,
-                "tool_call": {
-                    "tool": s.tool_call.tool_name,
-                    "arguments": s.tool_call.arguments,
-                }
-                if s.tool_call
-                else None,
-                "tool_result": {
-                    "success": s.tool_result.success,
-                    "output": s.tool_result.output[:300] if s.tool_result else "",
-                    "error": s.tool_result.error,
-                }
-                if s.tool_result
-                else None,
-                "interceptor_verdict": s.interceptor_decision.get("verdict") if s.interceptor_decision else "ALLOW",
-                "policy_id": s.interceptor_decision.get("policy_id") if s.interceptor_decision else None,
-                "reason": s.interceptor_decision.get("reason") if s.interceptor_decision else None,
-            }
-            for s in trace.steps
-        ],
+        "trace_steps": trace_steps_data,
     }
 
 
@@ -338,10 +466,18 @@ def get_sample_ledger() -> dict[str, Any]:
     ledger_path = temp_dir / "audit_demo.jsonl"
     ledger = AuditLedger(ledger_path)
 
-    if not ledger_path.exists() or ledger_path.stat().st_size == 0:
+    if not ledger_path.exists() or len(ledger_path.read_text(encoding="utf-8").splitlines()) < 5:
+        if ledger_path.exists():
+            ledger_path.unlink()
+        ledger = AuditLedger(ledger_path)
+        ledger.append("system", "genesis_init", {"role": "analyst", "verdict": "ALLOW", "scope": "session_init"})
+        ledger.append("worker-01", "capability_minted", {"tools": ["file_read", "sql_query", "calculator"], "verdict": "ALLOW", "policy_id": "RT-CAP-001"})
+        ledger.append("worker-01", "pre_input_screen", {"input_length": 68, "verdict": "ALLOW", "policy_id": "POL-INP-001"})
         ledger.append("worker-01", "tool_call", {"tool": "file_read", "path": "docs/safe.txt", "verdict": "ALLOW"})
-        ledger.append("worker-01", "tool_call", {"tool": "sql_query", "query": "SELECT * FROM payroll_secrets", "verdict": "BLOCK", "policy_id": "POL-TOOL-001"})
-        ledger.append("worker-01", "quarantine", {"reason": "Excessive tool loop detected", "verdict": "QUARANTINE", "policy_id": "RT-ANO-001"})
+        ledger.append("worker-01", "tool_call", {"tool": "sql_query", "query": "SELECT * FROM payroll_secrets", "verdict": "BLOCK", "policy_id": "POL-TOOL-001", "reason": "Restricted table access"})
+        ledger.append("worker-01", "anomaly_spike", {"metric": "token_velocity", "observed": 450, "threshold": 200, "verdict": "ESCALATE", "policy_id": "RT-ANO-002"})
+        ledger.append("worker-01", "post_output_screen", {"pattern": "QA_HOLDING_ACCT", "verdict": "BLOCK", "policy_id": "POL-OUT-003", "reason": "Data poisoning signature detected"})
+        ledger.append("worker-01", "quarantine", {"reason": "Security violations exceeded threshold", "verdict": "QUARANTINE", "policy_id": "RT-KILL-001", "ttc_us": 24.7})
 
     v_res = verify_audit_log(ledger_path)
     verification = {"valid": v_res.valid, "count": v_res.entries_checked, "reason": v_res.reason}

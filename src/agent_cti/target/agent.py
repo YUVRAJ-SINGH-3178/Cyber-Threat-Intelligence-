@@ -220,6 +220,7 @@ class TargetAgent:
                         step_idx=step_idx,
                         assistant_thought=llm_resp.content,
                         decision="ALLOW" if trace.status == "completed" else trace.status.upper(),
+                        policy_id=out_res.get("policy_id") if (interceptor and out_res) else None,
                         latency_ms=(time.perf_counter() - s0) * 1000.0,
                         tokens_used=llm_resp.total_tokens,
                     )
