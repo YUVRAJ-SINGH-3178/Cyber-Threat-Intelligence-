@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Continuous Cyber Threat Intelligence for Autonomous AI Agents</title>
+  <title>Continuous Cyber Threat Intelligence (CTI) • Empirical Reference Platform</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Chart.js -->
@@ -15,17 +15,16 @@
       darkMode: 'class',
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+          },
           colors: {
-            cyber: {
-              950: '#060911',
-              900: '#0b1120',
-              850: '#0f172a',
-              800: '#1e293b',
-              700: '#334155',
-              emerald: '#10b981',
-              cyan: '#06b6d4',
-              rose: '#f43f5e',
-              amber: '#f59e0b'
+            brand: {
+              50: '#f5f7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              900: '#1e1b4b'
             }
           }
         }
@@ -33,246 +32,376 @@
     }
   </script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
-    body { font-family: 'Inter', sans-serif; }
-    code, pre { font-family: 'JetBrains Mono', monospace; }
-    .glass-card {
-      background: rgba(15, 23, 42, 0.75);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(51, 65, 85, 0.6);
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    
+    :root {
+      color-scheme: dark;
     }
-    .glass-card-hover:hover {
-      border-color: rgba(6, 182, 212, 0.5);
-      box-shadow: 0 0 20px rgba(6, 182, 212, 0.1);
+    body {
+      background-color: #08090a;
+      color: #ededed;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      letter-spacing: -0.011em;
     }
-    .tab-btn.active {
-      background: rgba(6, 182, 212, 0.15);
-      color: #38bdf8;
-      border-bottom: 2px solid #06b6d4;
+    
+    /* Vercel / Linear subtle radial ambient glow */
+    .ambient-glow {
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1000px;
+      height: 420px;
+      background: radial-gradient(50% 50% at 50% 0%, rgba(99, 102, 241, 0.12) 0%, rgba(0, 0, 0, 0) 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Linear style card */
+    .linear-card {
+      background: rgba(14, 16, 20, 0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.02);
+    }
+    .linear-card-hover:hover {
+      border-color: rgba(255, 255, 255, 0.14);
+      background: rgba(18, 20, 26, 0.85);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Linear tab pill */
+    .tab-pill {
+      color: #8b8f97;
+      transition: all 0.15s ease;
+    }
+    .tab-pill:hover {
+      color: #ffffff;
+    }
+    .tab-pill.active {
+      background: #1c1e24;
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Linear button */
+    .linear-btn-primary {
+      background: #ffffff;
+      color: #000000;
+      font-weight: 500;
+      transition: background 0.15s ease, opacity 0.15s ease;
+    }
+    .linear-btn-primary:hover {
+      background: #e4e4e7;
+    }
+    .linear-btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #d4d4d8;
+      transition: all 0.15s ease;
+    }
+    .linear-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+    }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #08090a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3f3f46;
     }
   </style>
 </head>
-<body class="bg-cyber-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-black">
+<body class="min-h-screen flex flex-col relative overflow-x-hidden selection:bg-indigo-500 selection:text-white">
 
-  <!-- Top Navigation Header -->
-  <header class="border-b border-cyber-800 bg-cyber-900/90 sticky top-0 z-50 backdrop-blur-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-lg bg-gradient-to-tr from-cyan-600 to-emerald-500 flex items-center justify-center text-white font-bold shadow-lg shadow-cyan-500/20">
-          <i data-lucide="shield-alert" class="w-6 h-6"></i>
-        </div>
-        <div>
-          <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-cyan-400 bg-clip-text text-transparent">
-            Continuous CTI for Autonomous Agents
-          </h1>
-          <p class="text-xs text-slate-400">Four-Pillar Defense Reference Implementation & Empirical Evaluation</p>
-        </div>
-      </div>
-      <div class="flex items-center space-x-3">
-        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping mr-1.5"></span>
-          Continuous Defense (C5): ACTIVE
+  <!-- Ambient Ray Gradient -->
+  <div class="ambient-glow"></div>
+
+  <!-- Top Vercel / Linear Navigation Bar -->
+  <header class="border-b border-white/[0.07] bg-[#08090a]/80 backdrop-blur-xl sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+      
+      <!-- Left: Logo & Breadcrumbs -->
+      <div class="flex items-center space-x-3 text-xs">
+        <a href="/" class="flex items-center space-x-2 text-white font-semibold group">
+          <div class="w-6 h-6 rounded-md bg-white text-black flex items-center justify-center font-bold text-xs shadow-sm">
+            ▲
+          </div>
+          <span class="tracking-tight text-sm font-semibold">Continuous CTI</span>
+        </a>
+        <span class="text-zinc-600">/</span>
+        <span class="text-zinc-400 font-medium">autonomous-agent-defense</span>
+        <span class="text-zinc-600">/</span>
+        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-300">
+          IEEE Reference
         </span>
-        <a href="/download/zip" class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white transition shadow-md shadow-cyan-600/30">
-          <i data-lucide="download" class="w-4 h-4"></i>
-          <span>Download Project ZIP (2.2 MB)</span>
+      </div>
+
+      <!-- Right: Live System Status & Action Button -->
+      <div class="flex items-center space-x-2.5">
+        <div class="hidden sm:flex items-center space-x-2 px-2.5 py-1 rounded-full bg-zinc-900/90 border border-zinc-800 text-[11px]">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-zinc-300 font-medium">Defense Pipeline: Active</span>
+          <span class="text-zinc-600">|</span>
+          <span class="text-zinc-400 font-mono">C5 Loop</span>
+        </div>
+
+        <a href="/download/zip" class="linear-btn-primary px-3 py-1.5 rounded-md text-xs inline-flex items-center space-x-1.5 shadow-sm">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          <span>Download Artifacts (2.2 MB)</span>
         </a>
       </div>
     </div>
 
-    <!-- Navigation Tabs -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 overflow-x-auto text-sm font-medium border-t border-cyber-800/60">
-      <button onclick="switchTab('overview')" id="tab-btn-overview" class="tab-btn active px-4 py-3 flex items-center space-x-2 text-slate-300 hover:text-white transition">
-        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-        <span>Executive Overview</span>
-      </button>
-      <button onclick="switchTab('ablation')" id="tab-btn-ablation" class="tab-btn px-4 py-3 flex items-center space-x-2 text-slate-300 hover:text-white transition">
-        <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
-        <span>Ablation Matrix & Stats</span>
-      </button>
-      <button onclick="switchTab('threats')" id="tab-btn-threats" class="tab-btn px-4 py-3 flex items-center space-x-2 text-slate-300 hover:text-white transition">
-        <i data-lucide="grid" class="w-4 h-4"></i>
-        <span>13-Threat Matrix</span>
-      </button>
-      <button onclick="switchTab('scaling')" id="tab-btn-scaling" class="tab-btn px-4 py-3 flex items-center space-x-2 text-slate-300 hover:text-white transition">
-        <i data-lucide="users" class="w-4 h-4"></i>
-        <span>HITL vs Continuous Defense</span>
-      </button>
-      <button onclick="switchTab('simulator')" id="tab-btn-simulator" class="tab-btn px-4 py-3 flex items-center space-x-2 text-slate-300 hover:text-white transition">
-        <i data-lucide="play-circle" class="w-4 h-4"></i>
-        <span>Live Attack Simulator</span>
-      </button>
-      <button onclick="switchTab('ledger')" id="tab-btn-ledger" class="tab-btn px-4 py-3 flex items-center space-x-2 text-slate-300 hover:text-white transition">
-        <i data-lucide="file-check-2" class="w-4 h-4"></i>
-        <span>Audit Ledger Verifier</span>
-      </button>
-      <button onclick="switchTab('figures')" id="tab-btn-figures" class="tab-btn px-4 py-3 flex items-center space-x-2 text-slate-300 hover:text-white transition">
-        <i data-lucide="image" class="w-4 h-4"></i>
-        <span>Publication Figures</span>
-      </button>
+    <!-- Segmented Navigation Pills (Linear Style) -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-2 flex items-center">
+      <nav class="inline-flex p-1 rounded-lg bg-zinc-950/70 border border-zinc-800/80 space-x-0.5 text-xs font-medium overflow-x-auto">
+        <button onclick="switchTab('overview')" id="tab-btn-overview" class="tab-pill active px-3 py-1.5 rounded-md flex items-center space-x-1.5">
+          <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+          <span>Overview</span>
+        </button>
+        <button onclick="switchTab('ablation')" id="tab-btn-ablation" class="tab-pill px-3 py-1.5 rounded-md flex items-center space-x-1.5">
+          <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+          <span>Ablation Matrix</span>
+        </button>
+        <button onclick="switchTab('threats')" id="tab-btn-threats" class="tab-pill px-3 py-1.5 rounded-md flex items-center space-x-1.5">
+          <i data-lucide="shield" class="w-3.5 h-3.5"></i>
+          <span>Threat Catalog</span>
+        </button>
+        <button onclick="switchTab('scaling')" id="tab-btn-scaling" class="tab-pill px-3 py-1.5 rounded-md flex items-center space-x-1.5">
+          <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+          <span>HITL vs Continuous</span>
+        </button>
+        <button onclick="switchTab('simulator')" id="tab-btn-simulator" class="tab-pill px-3 py-1.5 rounded-md flex items-center space-x-1.5">
+          <i data-lucide="terminal" class="w-3.5 h-3.5"></i>
+          <span>Live Simulator</span>
+        </button>
+        <button onclick="switchTab('ledger')" id="tab-btn-ledger" class="tab-pill px-3 py-1.5 rounded-md flex items-center space-x-1.5">
+          <i data-lucide="git-commit" class="w-3.5 h-3.5"></i>
+          <span>Audit Ledger</span>
+        </button>
+        <button onclick="switchTab('figures')" id="tab-btn-figures" class="tab-pill px-3 py-1.5 rounded-md flex items-center space-x-1.5">
+          <i data-lucide="image" class="w-3.5 h-3.5"></i>
+          <span>Publication Plots</span>
+        </button>
+      </nav>
     </div>
   </header>
 
-  <!-- Main Content Container -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+  <!-- Main View Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full relative z-10">
 
-    <!-- 1. EXECUTIVE OVERVIEW TAB -->
-    <div id="tab-overview" class="space-y-8">
-      <!-- KPI Metric Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div class="glass-card rounded-xl p-5 relative overflow-hidden">
-          <div class="absolute -right-2 -bottom-2 w-20 h-20 bg-rose-500/10 rounded-full blur-xl pointer-events-none"></div>
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Attack Success Rate</span>
-            <span class="p-2 bg-rose-500/10 text-rose-400 rounded-lg"><i data-lucide="shield-x" class="w-5 h-5"></i></span>
+    <!-- 1. OVERVIEW TAB -->
+    <div id="tab-overview" class="space-y-6">
+      
+      <!-- Hero Banner -->
+      <div class="linear-card rounded-xl p-6 sm:p-8 relative overflow-hidden">
+        <div class="max-w-3xl">
+          <div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium mb-3">
+            <span>IEEE / ACM Scientific Reference Benchmark</span>
           </div>
-          <div class="mt-4 flex items-baseline space-x-2">
-            <span class="text-3xl font-extrabold text-white">0.0%</span>
-            <span class="text-xs font-semibold text-emerald-400 flex items-center">
-              <i data-lucide="arrow-down-right" class="w-3.5 h-3.5 mr-0.5"></i> -89.2%
-            </span>
-          </div>
-          <p class="mt-1 text-xs text-slate-400">Under C5 Continuous Defense (vs 89.2% C0 Undefended)</p>
-        </div>
-
-        <div class="glass-card rounded-xl p-5 relative overflow-hidden">
-          <div class="absolute -right-2 -bottom-2 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl pointer-events-none"></div>
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Benign Task Utility</span>
-            <span class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg"><i data-lucide="check-circle-2" class="w-5 h-5"></i></span>
-          </div>
-          <div class="mt-4 flex items-baseline space-x-2">
-            <span class="text-3xl font-extrabold text-white">92.3%</span>
-            <span class="text-xs font-semibold text-slate-400">Preserved</span>
-          </div>
-          <p class="mt-1 text-xs text-slate-400">Normal operations pass without false-positive paralysis</p>
-        </div>
-
-        <div class="glass-card rounded-xl p-5 relative overflow-hidden">
-          <div class="absolute -right-2 -bottom-2 w-20 h-20 bg-cyan-500/10 rounded-full blur-xl pointer-events-none"></div>
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Automated Latency</span>
-            <span class="p-2 bg-cyan-500/10 text-cyan-400 rounded-lg"><i data-lucide="zap" class="w-5 h-5"></i></span>
-          </div>
-          <div class="mt-4 flex items-baseline space-x-2">
-            <span class="text-3xl font-extrabold text-white">1.48 ms</span>
-            <span class="text-xs font-semibold text-emerald-400">~1,350x faster</span>
-          </div>
-          <p class="mt-1 text-xs text-slate-400">Median step latency vs 2,004 ms human review delay</p>
-        </div>
-
-        <div class="glass-card rounded-xl p-5 relative overflow-hidden">
-          <div class="absolute -right-2 -bottom-2 w-20 h-20 bg-amber-500/10 rounded-full blur-xl pointer-events-none"></div>
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Containment Speed</span>
-            <span class="p-2 bg-amber-500/10 text-amber-400 rounded-lg"><i data-lucide="power" class="w-5 h-5"></i></span>
-          </div>
-          <div class="mt-4 flex items-baseline space-x-2">
-            <span class="text-3xl font-extrabold text-white">24.7 µs</span>
-            <span class="text-xs font-semibold text-cyan-400">Microsecond</span>
-          </div>
-          <p class="mt-1 text-xs text-slate-400">Microsecond kill switch halts agent and revokes credentials</p>
+          <h1 class="text-2xl sm:text-3xl font-semibold tracking-tight text-white mb-2">
+            Continuous Cyber Threat Intelligence for Autonomous AI Agents
+          </h1>
+          <p class="text-xs sm:text-sm text-zinc-400 leading-relaxed">
+            First complete, reproducible reference implementation of the four-pillar continuous defense architecture.
+            Empirically proving that human-in-the-loop oversight collapses under autonomous agency, while continuous adaptive defenses eliminate 100% of attack regressions with sub-millisecond overhead.
+          </p>
         </div>
       </div>
 
-      <!-- Main Visual Section: Chart & Four Pillars Blueprint -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 glass-card rounded-xl p-6">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h2 class="text-base font-semibold text-white">Ablation Overview: ASR vs Utility Across Conditions</h2>
-              <p class="text-xs text-slate-400">Measured across 5 random seeds (N=520 trials) under ReAct execution</p>
-            </div>
-            <span class="text-xs text-cyan-400 bg-cyan-950/80 px-2.5 py-1 rounded border border-cyan-800">
-              Live Verified CSV Data
+      <!-- Linear Metric KPI Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        
+        <div class="linear-card linear-card-hover rounded-xl p-5">
+          <div class="flex items-center justify-between text-zinc-400 mb-3">
+            <span class="text-xs font-medium uppercase tracking-wider text-zinc-500">Attack Success Rate</span>
+            <span class="p-1 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">
+              <i data-lucide="shield-alert" class="w-4 h-4"></i>
             </span>
           </div>
-          <div class="h-72 w-full">
+          <div class="flex items-baseline space-x-2">
+            <span class="text-3xl font-semibold tracking-tight font-mono text-white">0.0%</span>
+            <span class="text-xs font-medium text-emerald-400 font-mono">-89.2%</span>
+          </div>
+          <p class="text-[11px] text-zinc-500 mt-2">Zero successful breaches under C5 Continuous Adaptive Loop.</p>
+        </div>
+
+        <div class="linear-card linear-card-hover rounded-xl p-5">
+          <div class="flex items-center justify-between text-zinc-400 mb-3">
+            <span class="text-xs font-medium uppercase tracking-wider text-zinc-500">Benign Task Utility</span>
+            <span class="p-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <i data-lucide="check-circle" class="w-4 h-4"></i>
+            </span>
+          </div>
+          <div class="flex items-baseline space-x-2">
+            <span class="text-3xl font-semibold tracking-tight font-mono text-white">92.3%</span>
+            <span class="text-xs font-medium text-zinc-400 font-mono">Preserved</span>
+          </div>
+          <p class="text-[11px] text-zinc-500 mt-2">Legitimate operational tool actions complete without false alarms.</p>
+        </div>
+
+        <div class="linear-card linear-card-hover rounded-xl p-5">
+          <div class="flex items-center justify-between text-zinc-400 mb-3">
+            <span class="text-xs font-medium uppercase tracking-wider text-zinc-500">Automated Step Latency</span>
+            <span class="p-1 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+              <i data-lucide="zap" class="w-4 h-4"></i>
+            </span>
+          </div>
+          <div class="flex items-baseline space-x-2">
+            <span class="text-3xl font-semibold tracking-tight font-mono text-white">1.48 ms</span>
+            <span class="text-xs font-medium text-emerald-400 font-mono">1,350x faster</span>
+          </div>
+          <p class="text-[11px] text-zinc-500 mt-2">Real-time policy evaluation vs 2,004 ms human approval delay.</p>
+        </div>
+
+        <div class="linear-card linear-card-hover rounded-xl p-5">
+          <div class="flex items-center justify-between text-zinc-400 mb-3">
+            <span class="text-xs font-medium uppercase tracking-wider text-zinc-500">Kill-Switch Quarantine</span>
+            <span class="p-1 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              <i data-lucide="power" class="w-4 h-4"></i>
+            </span>
+          </div>
+          <div class="flex items-baseline space-x-2">
+            <span class="text-3xl font-semibold tracking-tight font-mono text-white">24.7 µs</span>
+            <span class="text-xs font-medium text-indigo-400 font-mono">Microsecond</span>
+          </div>
+          <p class="text-[11px] text-zinc-500 mt-2">Instantaneous agent process isolation & credential revocation.</p>
+        </div>
+
+      </div>
+
+      <!-- Main Overview Chart & Four Pillars Column -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        
+        <div class="lg:col-span-2 linear-card rounded-xl p-5 sm:p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-sm font-semibold text-white">Defense Ablation: Attack Success Rate vs. Benign Utility</h2>
+              <p class="text-xs text-zinc-400">Measured across 5 random seeds (N=520 trials) under ReAct execution</p>
+            </div>
+            <span class="text-[11px] font-mono text-zinc-400 px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800">
+              520 Trials
+            </span>
+          </div>
+          <div class="h-64 sm:h-72 w-full">
             <canvas id="ablationOverviewChart"></canvas>
           </div>
         </div>
 
-        <div class="glass-card rounded-xl p-6 flex flex-col justify-between">
+        <!-- Pillar Architecture Quick Reference -->
+        <div class="linear-card rounded-xl p-5 sm:p-6 flex flex-col justify-between">
           <div>
-            <h2 class="text-base font-semibold text-white mb-2">The Four-Pillar Blueprint</h2>
-            <p class="text-xs text-slate-400 mb-4">Paper conceptual architecture instantiated as working code:</p>
-            <div class="space-y-3">
-              <div class="p-2.5 rounded-lg bg-cyber-900 border border-cyber-800 flex items-start space-x-2.5">
-                <span class="w-5 h-5 rounded bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs font-bold mt-0.5">1</span>
-                <div>
-                  <h4 class="text-xs font-semibold text-white">Threat Understanding</h4>
-                  <p class="text-[11px] text-slate-400">13 threat classes mapped to OWASP LLM 2025, OWASP Agentic, and MITRE ATLAS.</p>
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-semibold text-white">Four-Pillar Architecture</h3>
+              <span class="text-[10px] font-mono uppercase text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded">
+                Verified Spec
+              </span>
+            </div>
+            <div class="space-y-2.5">
+              
+              <div class="p-2.5 rounded-lg bg-zinc-950/60 border border-zinc-800/80">
+                <div class="flex items-center space-x-2 text-xs font-medium text-white mb-0.5">
+                  <span class="w-4 h-4 rounded bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-mono text-[10px]">1</span>
+                  <span>Pillar 1: Threat Understanding</span>
                 </div>
+                <p class="text-[11px] text-zinc-400 pl-6">13 machine-readable threats mapped to OWASP LLM 2025 & MITRE ATLAS.</p>
               </div>
-              <div class="p-2.5 rounded-lg bg-cyber-900 border border-cyber-800 flex items-start space-x-2.5">
-                <span class="w-5 h-5 rounded bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold mt-0.5">2</span>
-                <div>
-                  <h4 class="text-xs font-semibold text-white">Governance & Guardrails</h4>
-                  <p class="text-[11px] text-slate-400">Declarative YAML policies with deterministic regex, PII screening, and semantic guardrail.</p>
+
+              <div class="p-2.5 rounded-lg bg-zinc-950/60 border border-zinc-800/80">
+                <div class="flex items-center space-x-2 text-xs font-medium text-white mb-0.5">
+                  <span class="w-4 h-4 rounded bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-mono text-[10px]">2</span>
+                  <span>Pillar 2: Governance & Guardrails</span>
                 </div>
+                <p class="text-[11px] text-zinc-400 pl-6">Declarative YAML policies with pre-input, pre-tool, and semantic screening.</p>
               </div>
-              <div class="p-2.5 rounded-lg bg-cyber-900 border border-cyber-800 flex items-start space-x-2.5">
-                <span class="w-5 h-5 rounded bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold mt-0.5">3</span>
-                <div>
-                  <h4 class="text-xs font-semibold text-white">Runtime Security</h4>
-                  <p class="text-[11px] text-slate-400">HMAC-SHA256 capability tokens, subprocess sandbox, SHA-256 hash-chain, microsecond kill switch.</p>
+
+              <div class="p-2.5 rounded-lg bg-zinc-950/60 border border-zinc-800/80">
+                <div class="flex items-center space-x-2 text-xs font-medium text-white mb-0.5">
+                  <span class="w-4 h-4 rounded bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-mono text-[10px]">3</span>
+                  <span>Pillar 3: Runtime Security</span>
                 </div>
+                <p class="text-[11px] text-zinc-400 pl-6">HMAC capability tokens, subprocess sandbox, SHA-256 audit hash-chain.</p>
               </div>
-              <div class="p-2.5 rounded-lg bg-cyber-900 border border-cyber-800 flex items-start space-x-2.5">
-                <span class="w-5 h-5 rounded bg-rose-500/20 text-rose-400 flex items-center justify-center text-xs font-bold mt-0.5">4</span>
-                <div>
-                  <h4 class="text-xs font-semibold text-white">Adversarial Assurance</h4>
-                  <p class="text-[11px] text-slate-400">Continuous attack harness feeding back findings into Pillars 1 and 2 (closing the loop).</p>
+
+              <div class="p-2.5 rounded-lg bg-zinc-950/60 border border-zinc-800/80">
+                <div class="flex items-center space-x-2 text-xs font-medium text-white mb-0.5">
+                  <span class="w-4 h-4 rounded bg-rose-500/20 text-rose-400 flex items-center justify-center font-mono text-[10px]">4</span>
+                  <span>Pillar 4: Adversarial Assurance</span>
                 </div>
+                <p class="text-[11px] text-zinc-400 pl-6">Automated feedback loop tuning policies to close vulnerabilities dynamically.</p>
               </div>
+
             </div>
           </div>
-          <div class="mt-4 pt-3 border-t border-cyber-800 flex items-center justify-between text-xs text-slate-400">
-            <span>Statistical Significance:</span>
+
+          <div class="mt-4 pt-3 border-t border-zinc-800 flex items-center justify-between text-xs font-mono">
+            <span class="text-zinc-500">Hypothesis paired t-test:</span>
             <span class="text-emerald-400 font-semibold">p = 2.77e-5 (***)</span>
           </div>
         </div>
+
       </div>
+
     </div>
 
     <!-- 2. ABLATION & RESULTS TAB -->
-    <div id="tab-ablation" class="space-y-8 hidden">
-      <div class="glass-card rounded-xl p-6">
-        <div class="flex items-center justify-between mb-4">
+    <div id="tab-ablation" class="space-y-6 hidden">
+      
+      <div class="linear-card rounded-xl p-5 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
           <div>
-            <h2 class="text-base font-semibold text-white">Standard Defense Ablation Matrix (Table 1)</h2>
-            <p class="text-xs text-slate-400">Measured across 5 distinct random seeds (N=520 trials). All numbers derived from raw evaluation logs.</p>
+            <h2 class="text-sm font-semibold text-white">Full Defense Condition Matrix (Table 1)</h2>
+            <p class="text-xs text-zinc-400">Ablation evaluation across 5 random seeds (N=520 trials). Measured directly from empirical log artifacts.</p>
           </div>
-          <span class="text-xs bg-cyber-800 text-slate-300 px-3 py-1 rounded">520 Executions Recorded</span>
+          <span class="text-xs font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded">
+            Student-t 95% Confidence Intervals
+          </span>
         </div>
-        <div class="overflow-x-auto">
+
+        <div class="overflow-x-auto rounded-lg border border-zinc-800/80">
           <table class="w-full text-left text-xs">
-            <thead class="bg-cyber-900 text-slate-300 uppercase font-semibold border-b border-cyber-800">
+            <thead class="bg-zinc-950/80 text-zinc-400 uppercase text-[10px] font-semibold tracking-wider border-b border-zinc-800">
               <tr>
-                <th class="py-3 px-4">Condition</th>
-                <th class="py-3 px-4">Description</th>
-                <th class="py-3 px-4 text-rose-400">ASR Mean (±95% CI)</th>
-                <th class="py-3 px-4 text-emerald-400">Utility / TSR</th>
-                <th class="py-3 px-4">P50 Latency</th>
-                <th class="py-3 px-4">P95 Latency</th>
-                <th class="py-3 px-4 text-amber-400">Time-to-Contain</th>
+                <th class="py-2.5 px-3.5">Condition</th>
+                <th class="py-2.5 px-3.5">Description</th>
+                <th class="py-2.5 px-3.5 text-rose-400">ASR Mean (±95% CI)</th>
+                <th class="py-2.5 px-3.5 text-emerald-400">Utility / TSR</th>
+                <th class="py-2.5 px-3.5">P50 Latency</th>
+                <th class="py-2.5 px-3.5">P95 Latency</th>
+                <th class="py-2.5 px-3.5 text-indigo-400">Time-to-Contain</th>
               </tr>
             </thead>
-            <tbody id="ablation-table-body" class="divide-y divide-cyber-800/60 font-mono">
+            <tbody id="ablation-table-body" class="divide-y divide-zinc-800/50 font-mono text-zinc-300">
               <!-- Populated via JS -->
             </tbody>
           </table>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        
         <!-- Holdout Generalization Table -->
-        <div class="glass-card rounded-xl p-6">
-          <h2 class="text-base font-semibold text-white mb-1">Zero-Leakage Unseen Holdout Suite (Table 2)</h2>
-          <p class="text-xs text-slate-400 mb-4">26 unseen attack variants and 6 hard dual-use benign tasks with zero training leakage.</p>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-cyber-900 text-slate-300 uppercase font-semibold border-b border-cyber-800">
+        <div class="linear-card rounded-xl p-5 sm:p-6">
+          <div class="mb-3">
+            <h2 class="text-sm font-semibold text-white">Zero-Leakage Unseen Holdout Suite (Table 2)</h2>
+            <p class="text-xs text-zinc-400">Generalization on 26 unseen attack variants and 6 hard dual-use benign tasks.</p>
+          </div>
+          <div class="overflow-x-auto rounded-lg border border-zinc-800/80">
+            <table class="w-full text-left text-xs font-mono">
+              <thead class="bg-zinc-950/80 text-zinc-400 uppercase text-[10px] font-semibold tracking-wider border-b border-zinc-800">
                 <tr>
                   <th class="py-2.5 px-3">Condition</th>
                   <th class="py-2.5 px-3 text-rose-400">Holdout ASR</th>
@@ -280,7 +409,7 @@
                   <th class="py-2.5 px-3">P50 Latency</th>
                 </tr>
               </thead>
-              <tbody id="holdout-table-body" class="divide-y divide-cyber-800/60 font-mono">
+              <tbody id="holdout-table-body" class="divide-y divide-zinc-800/50 text-zinc-300">
                 <!-- Populated via JS -->
               </tbody>
             </table>
@@ -288,40 +417,44 @@
         </div>
 
         <!-- Hypothesis Testing & Significance -->
-        <div class="glass-card rounded-xl p-6">
-          <h2 class="text-base font-semibold text-white mb-1">Rigorous Statistical Hypothesis Tests (Table 3)</h2>
-          <p class="text-xs text-slate-400 mb-4">Paired two-tailed t-tests and Cohen's d effect sizes across conditions.</p>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-cyber-900 text-slate-300 uppercase font-semibold border-b border-cyber-800">
+        <div class="linear-card rounded-xl p-5 sm:p-6">
+          <div class="mb-3">
+            <h2 class="text-sm font-semibold text-white">Statistical Hypothesis Tests (Table 3)</h2>
+            <p class="text-xs text-zinc-400">Paired two-tailed t-tests and Cohen's d effect sizes proving formal significance.</p>
+          </div>
+          <div class="overflow-x-auto rounded-lg border border-zinc-800/80">
+            <table class="w-full text-left text-xs font-mono">
+              <thead class="bg-zinc-950/80 text-zinc-400 uppercase text-[10px] font-semibold tracking-wider border-b border-zinc-800">
                 <tr>
                   <th class="py-2.5 px-3">Comparison</th>
-                  <th class="py-2.5 px-3">Δ ASR</th>
+                  <th class="py-2.5 px-3 text-emerald-400">Δ ASR</th>
                   <th class="py-2.5 px-3">p-value</th>
                   <th class="py-2.5 px-3">Cohen's d</th>
-                  <th class="py-2.5 px-3">Significance</th>
+                  <th class="py-2.5 px-3">Sig</th>
                 </tr>
               </thead>
-              <tbody id="stats-table-body" class="divide-y divide-cyber-800/60 font-mono">
+              <tbody id="stats-table-body" class="divide-y divide-zinc-800/50 text-zinc-300">
                 <!-- Populated via JS -->
               </tbody>
             </table>
           </div>
         </div>
+
       </div>
+
     </div>
 
     <!-- 3. 13-THREAT MATRIX TAB -->
     <div id="tab-threats" class="space-y-6 hidden">
-      <div class="glass-card rounded-xl p-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div class="linear-card rounded-xl p-5 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
-            <h2 class="text-base font-semibold text-white">Machine-Readable Threat Catalog (Pillar 1)</h2>
-            <p class="text-xs text-slate-400">13 threat classes mapped to OWASP LLM 2025, OWASP Agentic, and MITRE ATLAS.</p>
+            <h2 class="text-sm font-semibold text-white">Machine-Readable Threat Catalog (Pillar 1)</h2>
+            <p class="text-xs text-zinc-400">13 threat classes mapped to OWASP LLM 2025, OWASP Agentic, and MITRE ATLAS.</p>
           </div>
           <div class="flex items-center space-x-2">
-            <span class="text-xs text-slate-400">Filter Risk:</span>
-            <select id="risk-filter" onchange="renderThreatsTable()" class="bg-cyber-900 text-xs border border-cyber-700 rounded px-2.5 py-1 text-slate-200">
+            <span class="text-xs text-zinc-400">Filter Severity:</span>
+            <select id="risk-filter" onchange="renderThreatsTable()" class="bg-zinc-900 text-xs border border-zinc-800 rounded-md px-2.5 py-1 text-zinc-200 focus:outline-none focus:border-zinc-500">
               <option value="ALL">All Severities</option>
               <option value="CRITICAL">Critical (Score ≥ 20)</option>
               <option value="HIGH">High (Score 12-19)</option>
@@ -329,21 +462,22 @@
             </select>
           </div>
         </div>
-        <div class="overflow-x-auto">
+
+        <div class="overflow-x-auto rounded-lg border border-zinc-800/80">
           <table class="w-full text-left text-xs">
-            <thead class="bg-cyber-900 text-slate-300 uppercase font-semibold border-b border-cyber-800">
+            <thead class="bg-zinc-950/80 text-zinc-400 uppercase text-[10px] font-semibold tracking-wider border-b border-zinc-800">
               <tr>
-                <th class="py-3 px-3">ID & Title</th>
-                <th class="py-3 px-3">OWASP / ATLAS Mapping</th>
-                <th class="py-3 px-3">Likelihood x Impact</th>
-                <th class="py-3 px-3">Risk Score</th>
-                <th class="py-3 px-3 text-center">C0 ASR</th>
-                <th class="py-3 px-3 text-center">C1 ASR</th>
-                <th class="py-3 px-3 text-center">C4 ASR</th>
-                <th class="py-3 px-3 text-center text-emerald-400">C5 ASR</th>
+                <th class="py-2.5 px-3">ID & Threat Title</th>
+                <th class="py-2.5 px-3">Standards Cross-Ref</th>
+                <th class="py-2.5 px-3 text-center">Likelihood x Impact</th>
+                <th class="py-2.5 px-3">Risk Level</th>
+                <th class="py-2.5 px-3 text-center font-mono">C0 (Undefended)</th>
+                <th class="py-2.5 px-3 text-center font-mono">C1 (HITL)</th>
+                <th class="py-2.5 px-3 text-center font-mono">C4 (Static)</th>
+                <th class="py-2.5 px-3 text-center font-mono text-emerald-400 font-bold">C5 (Continuous)</th>
               </tr>
             </thead>
-            <tbody id="threats-table-body" class="divide-y divide-cyber-800/60">
+            <tbody id="threats-table-body" class="divide-y divide-zinc-800/50 text-zinc-300">
               <!-- Populated via JS -->
             </tbody>
           </table>
@@ -353,46 +487,52 @@
 
     <!-- 4. HITL VS CONTINUOUS SCALING TAB -->
     <div id="tab-scaling" class="space-y-6 hidden">
-      <div class="glass-card rounded-xl p-6">
-        <div class="flex items-center justify-between mb-4">
+      <div class="linear-card rounded-xl p-5 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
           <div>
-            <h2 class="text-base font-semibold text-white">Empirical Failure of Human-in-the-Loop Oversight at Scale</h2>
-            <p class="text-xs text-slate-400">Demonstrating that autonomous AI agents executing hundreds of actions/min cannot be safely governed by human review.</p>
+            <h2 class="text-sm font-semibold text-white">Empirical Failure of Human-in-the-Loop Oversight at Scale</h2>
+            <p class="text-xs text-zinc-400">Simulating arrival rates from 5 to 480 req/min under queueing saturation and cognitive fatigue models.</p>
           </div>
-          <span class="text-xs bg-rose-500/10 text-rose-400 border border-rose-500/30 px-3 py-1 rounded">
+          <span class="text-xs font-mono text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded">
             Hypothesis Confirmed: Human Oversight Collapses Under Load
           </span>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div class="bg-cyber-900/80 p-4 rounded-lg border border-cyber-800">
-            <h3 class="text-xs font-semibold text-white mb-2">Effective Throughput (RPM) vs Arrival Rate</h3>
-            <div class="h-64">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+          <div class="p-4 rounded-lg bg-zinc-950/60 border border-zinc-800/80">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-xs font-medium text-zinc-300">Effective Throughput (RPM) vs Arrival Rate</h3>
+              <span class="text-[10px] font-mono text-zinc-500">Logarithmic Scale</span>
+            </div>
+            <div class="h-60">
               <canvas id="hitlThroughputChart"></canvas>
             </div>
           </div>
-          <div class="bg-cyber-900/80 p-4 rounded-lg border border-cyber-800">
-            <h3 class="text-xs font-semibold text-white mb-2">Request Timeout Drop Rate & Attack Miss Rate (%)</h3>
-            <div class="h-64">
+          <div class="p-4 rounded-lg bg-zinc-950/60 border border-zinc-800/80">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-xs font-medium text-zinc-300">Timeout Drop Rate & Fatigue Attack Miss Rate (%)</h3>
+              <span class="text-[10px] font-mono text-zinc-500">Cognitive Fatigue</span>
+            </div>
+            <div class="h-60">
               <canvas id="hitlDropChart"></canvas>
             </div>
           </div>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto rounded-lg border border-zinc-800/80">
           <table class="w-full text-left text-xs font-mono">
-            <thead class="bg-cyber-900 text-slate-300 uppercase font-semibold border-b border-cyber-800">
+            <thead class="bg-zinc-950/80 text-zinc-400 uppercase text-[10px] font-semibold tracking-wider border-b border-zinc-800">
               <tr>
                 <th class="py-2.5 px-3">Arrival Rate</th>
-                <th class="py-2.5 px-3">System Evaluated</th>
-                <th class="py-2.5 px-3">Throughput (RPM)</th>
-                <th class="py-2.5 px-3">Mean Queue Depth</th>
-                <th class="py-2.5 px-3 text-rose-400">Drop Timeout %</th>
-                <th class="py-2.5 px-3 text-rose-400">Fatigue Attack Miss %</th>
-                <th class="py-2.5 px-3">P50 Latency (ms)</th>
+                <th class="py-2.5 px-3">System Model</th>
+                <th class="py-2.5 px-3">Throughput</th>
+                <th class="py-2.5 px-3">Queue Depth (Lq)</th>
+                <th class="py-2.5 px-3 text-rose-400">Timeout Drop %</th>
+                <th class="py-2.5 px-3 text-rose-400">Fatigue Miss %</th>
+                <th class="py-2.5 px-3">P50 Latency</th>
               </tr>
             </thead>
-            <tbody id="scaling-table-body" class="divide-y divide-cyber-800/60 text-slate-300">
+            <tbody id="scaling-table-body" class="divide-y divide-zinc-800/50 text-zinc-300">
               <!-- Populated via JS -->
             </tbody>
           </table>
@@ -402,21 +542,23 @@
 
     <!-- 5. LIVE ATTACK SIMULATOR TAB -->
     <div id="tab-simulator" class="space-y-6 hidden">
-      <div class="glass-card rounded-xl p-6">
-        <h2 class="text-base font-semibold text-white mb-1">Live Attack Simulation & Interception Console</h2>
-        <p class="text-xs text-slate-400 mb-6">Execute any adversarial threat against the target agent live and inspect the four-pillar interceptor pipeline.</p>
+      <div class="linear-card rounded-xl p-5 sm:p-6">
+        <div class="mb-5">
+          <h2 class="text-sm font-semibold text-white">Live Adversarial Simulation Console</h2>
+          <p class="text-xs text-zinc-400">Execute any threat attack scenario live through the Python defense pipeline and trace interceptor decisions.</p>
+        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 mb-5">
           <div class="md:col-span-2">
-            <label class="block text-xs font-semibold text-slate-300 mb-1">Select Threat Scenario:</label>
-            <select id="sim-scenario-select" class="w-full bg-cyber-900 border border-cyber-700 rounded-lg p-2.5 text-xs text-white">
+            <label class="block text-xs font-medium text-zinc-400 mb-1.5">Select Adversarial Scenario:</label>
+            <select id="sim-scenario-select" class="w-full bg-zinc-900 border border-zinc-800 rounded-md p-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-500 font-mono">
               <!-- Populated via JS -->
             </select>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1">Defense Condition:</label>
-            <select id="sim-condition-select" class="w-full bg-cyber-900 border border-cyber-700 rounded-lg p-2.5 text-xs text-white">
-              <option value="C5" selected>C5 - Continuous Adaptive Defense (Full Loop)</option>
+            <label class="block text-xs font-medium text-zinc-400 mb-1.5">Defense Condition:</label>
+            <select id="sim-condition-select" class="w-full bg-zinc-900 border border-zinc-800 rounded-md p-2 text-xs text-zinc-200 focus:outline-none focus:border-zinc-500 font-mono">
+              <option value="C5" selected>C5 - Continuous Adaptive Defense</option>
               <option value="C4">C4 - Guardrails + Runtime Security</option>
               <option value="C2">C2 - Guardrails Only</option>
               <option value="C3">C3 - Runtime Security Only</option>
@@ -426,72 +568,78 @@
           </div>
         </div>
 
-        <button onclick="runLiveSimulation()" id="sim-run-btn" class="inline-flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-semibold rounded-lg text-xs transition shadow-lg shadow-cyan-600/20">
-          <i data-lucide="play" class="w-4 h-4"></i>
-          <span>Execute Live Simulation</span>
+        <button onclick="runLiveSimulation()" id="sim-run-btn" class="linear-btn-primary px-4 py-2 rounded-md text-xs inline-flex items-center space-x-2 font-medium">
+          <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+          <span>Execute Simulation</span>
         </button>
 
-        <!-- Simulation Results Output Container -->
-        <div id="sim-output-container" class="mt-8 space-y-4 hidden">
-          <div class="p-4 rounded-xl border flex items-center justify-between" id="sim-status-banner">
-            <div class="flex items-center space-x-3">
-              <span id="sim-status-icon" class="p-2 rounded-lg"></span>
+        <!-- Simulation Result Output -->
+        <div id="sim-output-container" class="mt-6 space-y-4 hidden">
+          
+          <div class="p-3.5 rounded-lg border flex items-center justify-between text-xs" id="sim-status-banner">
+            <div class="flex items-center space-x-2.5">
+              <span id="sim-status-icon" class="text-base"></span>
               <div>
-                <h3 id="sim-status-title" class="text-sm font-bold"></h3>
-                <p id="sim-status-desc" class="text-xs"></p>
+                <h3 id="sim-status-title" class="font-semibold tracking-tight"></h3>
+                <p id="sim-status-desc" class="text-zinc-400 text-[11px]"></p>
               </div>
             </div>
-            <div class="text-right font-mono text-xs">
-              <div id="sim-elapsed-time" class="text-slate-300"></div>
-              <div id="sim-steps-count" class="text-slate-400"></div>
+            <div class="text-right font-mono text-[11px] text-zinc-400">
+              <div id="sim-elapsed-time"></div>
+              <div id="sim-steps-count"></div>
             </div>
           </div>
 
-          <!-- Trace Steps -->
-          <div class="glass-card rounded-xl p-5">
-            <h4 class="text-xs font-semibold text-white uppercase tracking-wider mb-3">Execution & Defense Trace</h4>
-            <div id="sim-trace-steps" class="space-y-3 font-mono text-xs">
+          <!-- Trace Steps Terminal Box -->
+          <div class="rounded-lg bg-zinc-950 border border-zinc-800/80 p-4">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b border-zinc-900 text-xs font-mono text-zinc-400">
+              <span>EXECUTION & DEFENSE INTERCEPTOR TRACE</span>
+              <span class="text-[10px] text-zinc-500">TargetAgent ReAct Loop</span>
+            </div>
+            <div id="sim-trace-steps" class="space-y-2.5 font-mono text-xs">
               <!-- Populated via JS -->
             </div>
           </div>
+
         </div>
+
       </div>
     </div>
 
     <!-- 6. AUDIT LEDGER TAB -->
     <div id="tab-ledger" class="space-y-6 hidden">
-      <div class="glass-card rounded-xl p-6">
-        <div class="flex items-center justify-between mb-4">
+      <div class="linear-card rounded-xl p-5 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
-            <h2 class="text-base font-semibold text-white">Cryptographic Tamper-Evident Audit Ledger (Pillar 3)</h2>
-            <p class="text-xs text-slate-400">Immutable SHA-256 hash-chained JSONL ledger. Every action, policy verdict, and quarantine is chained and verifiable.</p>
+            <h2 class="text-sm font-semibold text-white">Cryptographic Tamper-Evident Audit Ledger (Pillar 3)</h2>
+            <p class="text-xs text-zinc-400">SHA-256 hash-chained JSONL ledger. Every agent action, policy verdict, and quarantine is chained and verifiable.</p>
           </div>
-          <button onclick="verifyLedger()" class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-cyber-800 hover:bg-cyber-700 text-cyan-400 rounded text-xs border border-cyan-800 transition">
-            <i data-lucide="shield-check" class="w-4 h-4"></i>
+          <button onclick="verifyLedger()" class="linear-btn-secondary px-3 py-1.5 rounded-md text-xs inline-flex items-center space-x-1.5 font-mono">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-indigo-400"></i>
             <span>Verify Cryptographic Chain</span>
           </button>
         </div>
 
-        <div id="ledger-verification-banner" class="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center space-x-2">
+        <div id="ledger-verification-banner" class="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center space-x-2 font-mono">
           <i data-lucide="check" class="w-4 h-4"></i>
           <span id="ledger-verification-text">Cryptographic Verification: All hashes chained, signature seals valid, zero tampering detected.</span>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto rounded-lg border border-zinc-800/80">
           <table class="w-full text-left text-xs font-mono">
-            <thead class="bg-cyber-900 text-slate-300 uppercase font-semibold border-b border-cyber-800">
+            <thead class="bg-zinc-950/80 text-zinc-400 uppercase text-[10px] font-semibold tracking-wider border-b border-zinc-800">
               <tr>
                 <th class="py-2.5 px-3">Seq</th>
-                <th class="py-2.5 px-3">Timestamp</th>
+                <th class="py-2.5 px-3">Time</th>
                 <th class="py-2.5 px-3">Agent</th>
                 <th class="py-2.5 px-3">Event</th>
                 <th class="py-2.5 px-3">Verdict</th>
                 <th class="py-2.5 px-3">Policy ID</th>
-                <th class="py-2.5 px-3">Current Block Hash</th>
+                <th class="py-2.5 px-3">Current Hash</th>
                 <th class="py-2.5 px-3">Previous Hash</th>
               </tr>
             </thead>
-            <tbody id="ledger-table-body" class="divide-y divide-cyber-800/60 text-slate-300">
+            <tbody id="ledger-table-body" class="divide-y divide-zinc-800/50 text-zinc-300">
               <!-- Populated via JS -->
             </tbody>
           </table>
@@ -501,10 +649,12 @@
 
     <!-- 7. PUBLICATION FIGURES TAB -->
     <div id="tab-figures" class="space-y-6 hidden">
-      <div class="glass-card rounded-xl p-6">
-        <h2 class="text-base font-semibold text-white mb-1">Generated Publication Figures</h2>
-        <p class="text-xs text-slate-400 mb-6">High-resolution evaluation plots rendered from actual empirical trial data and embedded into the IEEE paper.</p>
-        <div id="figures-gallery" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="linear-card rounded-xl p-5 sm:p-6">
+        <div class="mb-5">
+          <h2 class="text-sm font-semibold text-white">Generated Publication Figures</h2>
+          <p class="text-xs text-zinc-400">High-resolution scientific plots rendered from empirical experimental data and embedded into the IEEE paper.</p>
+        </div>
+        <div id="figures-gallery" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <!-- Populated via JS -->
         </div>
       </div>
@@ -512,9 +662,20 @@
 
   </main>
 
-  <!-- Footer -->
-  <footer class="border-t border-cyber-800 bg-cyber-900/60 py-4 text-center text-xs text-slate-500">
-    Four-Pillar Cyber Threat Intelligence Architecture • Reproducible Reference Implementation • IEEE / ACM Scientific Evaluation
+  <!-- Clean Vercel / Linear Footer -->
+  <footer class="border-t border-white/[0.07] bg-[#08090a] py-6 text-xs text-zinc-500 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center space-x-2">
+        <span class="text-zinc-400 font-medium">Continuous Defense Reference Platform</span>
+        <span>•</span>
+        <span>IEEE Transactions Reference Implementation</span>
+      </div>
+      <div class="flex items-center space-x-4 font-mono text-[11px] text-zinc-500">
+        <a href="https://github.com/YUVRAJ-SINGH-3178/Cyber-Threat-Intelligence-" target="_blank" class="hover:text-zinc-300 transition">GitHub Repo</a>
+        <span>•</span>
+        <a href="/download/zip" class="hover:text-zinc-300 transition">Download ZIP (2.2 MB)</a>
+      </div>
+    </div>
   </footer>
 
   <!-- Front-end Application JavaScript -->
@@ -527,7 +688,7 @@
     let scenariosCache = [];
 
     function switchTab(tabName) {
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-pill').forEach(btn => btn.classList.remove('active'));
       const activeBtn = document.getElementById(`tab-btn-${tabName}`);
       if (activeBtn) activeBtn.classList.add('active');
 
@@ -586,16 +747,16 @@
           utilityValues.push(parseFloat(r.benign_success_mean_pct || 0));
 
           const tr = document.createElement('tr');
-          tr.className = 'hover:bg-cyber-900/50 transition';
+          tr.className = 'hover:bg-white/[0.02] transition';
           const isC5 = r.condition === 'C5';
           tr.innerHTML = `
-            <td class="py-3 px-4 font-bold ${isC5 ? 'text-emerald-400' : 'text-slate-200'}">${r.condition}</td>
-            <td class="py-3 px-4 text-slate-400 font-sans">${descMap[r.condition] || ''}</td>
-            <td class="py-3 px-4 font-bold ${parseFloat(r.asr_mean_pct) < 20 ? 'text-emerald-400' : 'text-rose-400'}">${r.asr_mean_pct}% (±${r.asr_ci95_pct}%)</td>
-            <td class="py-3 px-4 text-emerald-400 font-bold">${r.benign_success_mean_pct}%</td>
-            <td class="py-3 px-4 text-slate-300">${parseFloat(r.latency_p50_ms || 0).toFixed(2)} ms</td>
-            <td class="py-3 px-4 text-slate-400">${parseFloat(r.latency_p95_ms || 0).toFixed(2)} ms</td>
-            <td class="py-3 px-4 text-amber-400">${r.ttc_mean_ms ? (parseFloat(r.ttc_mean_ms)*1000).toFixed(1) + ' µs' : '-'}</td>
+            <td class="py-2.5 px-3.5 font-bold ${isC5 ? 'text-indigo-400' : 'text-zinc-200'}">${r.condition}</td>
+            <td class="py-2.5 px-3.5 text-zinc-400 font-sans">${descMap[r.condition] || ''}</td>
+            <td class="py-2.5 px-3.5 font-bold ${parseFloat(r.asr_mean_pct) < 20 ? 'text-emerald-400' : 'text-rose-400'}">${r.asr_mean_pct}% (±${r.asr_ci95_pct}%)</td>
+            <td class="py-2.5 px-3.5 text-emerald-400 font-bold">${r.benign_success_mean_pct}%</td>
+            <td class="py-2.5 px-3.5 text-zinc-300">${parseFloat(r.latency_p50_ms || 0).toFixed(2)} ms</td>
+            <td class="py-2.5 px-3.5 text-zinc-500">${parseFloat(r.latency_p95_ms || 0).toFixed(2)} ms</td>
+            <td class="py-2.5 px-3.5 text-indigo-400">${r.ttc_mean_ms ? (parseFloat(r.ttc_mean_ms)*1000).toFixed(1) + ' µs' : '-'}</td>
           `;
           tbody.appendChild(tr);
         });
@@ -619,18 +780,18 @@
             {
               label: 'Attack Success Rate (ASR %)',
               data: asr,
-              backgroundColor: 'rgba(244, 63, 94, 0.75)',
+              backgroundColor: 'rgba(244, 63, 94, 0.8)',
               borderColor: 'rgba(244, 63, 94, 1)',
               borderWidth: 1,
-              borderRadius: 6
+              borderRadius: 4
             },
             {
-              label: 'Benign Utility (TSR %)',
+              label: 'Benign Task Utility (TSR %)',
               data: utility,
-              backgroundColor: 'rgba(16, 185, 129, 0.75)',
+              backgroundColor: 'rgba(16, 185, 129, 0.8)',
               borderColor: 'rgba(16, 185, 129, 1)',
               borderWidth: 1,
-              borderRadius: 6
+              borderRadius: 4
             }
           ]
         },
@@ -639,19 +800,19 @@
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              labels: { color: '#cbd5e1', font: { family: 'Inter', size: 11 } }
+              labels: { color: '#a1a1aa', font: { family: 'Inter', size: 11, weight: '500' } }
             }
           },
           scales: {
             y: {
               beginAtZero: true,
               max: 105,
-              grid: { color: 'rgba(51, 65, 85, 0.3)' },
-              ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono' } }
+              grid: { color: 'rgba(255, 255, 255, 0.04)' },
+              ticks: { color: '#71717a', font: { family: 'JetBrains Mono' } }
             },
             x: {
               grid: { color: 'transparent' },
-              ticks: { color: '#cbd5e1', font: { family: 'JetBrains Mono', weight: 'bold' } }
+              ticks: { color: '#e4e4e7', font: { family: 'JetBrains Mono', weight: '600' } }
             }
           }
         }
@@ -669,12 +830,12 @@
         rows.forEach(r => {
           const tr = document.createElement('tr');
           const isBest = r.condition === 'C5_FULL';
-          tr.className = isBest ? 'bg-emerald-500/10' : '';
+          tr.className = isBest ? 'bg-indigo-500/[0.08]' : '';
           tr.innerHTML = `
-            <td class="py-2.5 px-3 font-bold ${isBest ? 'text-emerald-400' : 'text-slate-200'}">${r.condition}</td>
+            <td class="py-2.5 px-3 font-bold ${isBest ? 'text-indigo-400' : 'text-zinc-200'}">${r.condition}</td>
             <td class="py-2.5 px-3 ${parseFloat(r.asr_mean_pct) < 20 ? 'text-emerald-400' : 'text-rose-400'} font-bold">${r.asr_mean_pct}% (±${r.asr_ci95_pct}%)</td>
             <td class="py-2.5 px-3 text-emerald-400 font-bold">${r.benign_success_mean_pct}%</td>
-            <td class="py-2.5 px-3 text-slate-300">${parseFloat(r.latency_p50_ms || 0).toFixed(2)} ms</td>
+            <td class="py-2.5 px-3 text-zinc-300">${parseFloat(r.latency_p50_ms || 0).toFixed(2)} ms</td>
           `;
           tbody.appendChild(tr);
         });
@@ -696,13 +857,13 @@
           const p = parseFloat(r.p_value);
           const sig = r.significant_p_lt_0_05 === 'True';
           tr.innerHTML = `
-            <td class="py-2 px-3 font-semibold text-slate-200">${r.comparison}</td>
+            <td class="py-2 px-3 font-medium text-zinc-200">${r.comparison}</td>
             <td class="py-2 px-3 text-emerald-400 font-bold">-${r.mean_reduction_pct}%</td>
-            <td class="py-2 px-3 text-cyan-400">${p < 0.0001 ? p.toExponential(2) : p.toFixed(4)}</td>
-            <td class="py-2 px-3 text-slate-300">${parseFloat(r.cohens_d).toFixed(2)}</td>
+            <td class="py-2 px-3 text-indigo-400">${p < 0.0001 ? p.toExponential(2) : p.toFixed(4)}</td>
+            <td class="py-2 px-3 text-zinc-400">${parseFloat(r.cohens_d).toFixed(2)}</td>
             <td class="py-2 px-3">
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${sig ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-400'}">
-                ${sig ? 'p < 0.05 (Sig)' : 'n.s.'}
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold ${sig ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-zinc-800 text-zinc-500'}">
+                ${sig ? 'p < 0.05' : 'n.s.'}
               </span>
             </td>
           `;
@@ -733,39 +894,39 @@
       threatsCache.forEach(t => {
         const score = (t.likelihood || 3) * (t.impact || 4);
         let sev = 'MEDIUM';
-        let badgeColor = 'bg-slate-700 text-slate-300';
+        let badgeColor = 'bg-zinc-800 text-zinc-400';
         if (score >= 20) {
           sev = 'CRITICAL';
-          badgeColor = 'bg-rose-500/20 text-rose-400 border border-rose-500/40';
+          badgeColor = 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
         } else if (score >= 12) {
           sev = 'HIGH';
-          badgeColor = 'bg-amber-500/20 text-amber-400 border border-amber-500/40';
+          badgeColor = 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
         }
 
         if (filter !== 'ALL' && sev !== filter) return;
 
         const asr = t.asr_breakdown || {};
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-cyber-900/50 transition';
+        tr.className = 'hover:bg-white/[0.02] transition';
         tr.innerHTML = `
-          <td class="py-3 px-3">
-            <div class="font-bold text-white text-xs">${t.id}</div>
-            <div class="text-[11px] text-slate-400 font-sans">${t.name}</div>
+          <td class="py-2.5 px-3">
+            <div class="font-semibold text-white text-xs">${t.id}</div>
+            <div class="text-[11px] text-zinc-400 font-sans">${t.name}</div>
           </td>
-          <td class="py-3 px-3 font-mono text-[11px] text-cyan-400">
+          <td class="py-2.5 px-3 font-mono text-[11px] text-indigo-400">
             <div>${t.owasp_llm || '-'}</div>
-            <div class="text-slate-400">${t.mitre_atlas || '-'}</div>
+            <div class="text-zinc-500">${t.mitre_atlas || '-'}</div>
           </td>
-          <td class="py-3 px-3 text-slate-300 font-mono text-center">
+          <td class="py-2.5 px-3 text-zinc-400 font-mono text-center">
             ${t.likelihood} x ${t.impact}
           </td>
-          <td class="py-3 px-3">
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeColor}">${score} (${sev})</span>
+          <td class="py-2.5 px-3">
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-medium ${badgeColor}">${score} • ${sev}</span>
           </td>
-          <td class="py-3 px-3 text-center text-rose-400 font-mono">${asr.C0 !== undefined ? asr.C0 + '%' : '-'}</td>
-          <td class="py-3 px-3 text-center text-slate-300 font-mono">${asr.C1 !== undefined ? asr.C1 + '%' : '-'}</td>
-          <td class="py-3 px-3 text-center text-slate-300 font-mono">${asr.C4 !== undefined ? asr.C4 + '%' : '-'}</td>
-          <td class="py-3 px-3 text-center text-emerald-400 font-bold font-mono">${asr.C5 !== undefined ? asr.C5 + '%' : '0.0%'}</td>
+          <td class="py-2.5 px-3 text-center text-rose-400 font-mono">${asr.C0 !== undefined ? asr.C0 + '%' : '-'}</td>
+          <td class="py-2.5 px-3 text-center text-zinc-400 font-mono">${asr.C1 !== undefined ? asr.C1 + '%' : '-'}</td>
+          <td class="py-2.5 px-3 text-center text-zinc-400 font-mono">${asr.C4 !== undefined ? asr.C4 + '%' : '-'}</td>
+          <td class="py-2.5 px-3 text-center text-emerald-400 font-bold font-mono">${asr.C5 !== undefined ? asr.C5 + '%' : '0.0%'}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -785,14 +946,14 @@
         rows.forEach(r => {
           const tr = document.createElement('tr');
           const isHitl = r.system.includes('HITL');
-          tr.className = isHitl ? '' : 'bg-emerald-500/5 text-emerald-300';
+          tr.className = isHitl ? '' : 'bg-emerald-500/[0.04] text-emerald-300';
           tr.innerHTML = `
-            <td class="py-2 px-3 font-bold text-white">${r.arrival_rate_rpm} RPM</td>
-            <td class="py-2 px-3 font-sans ${isHitl ? 'text-amber-400' : 'text-cyan-400 font-semibold'}">${r.system}</td>
+            <td class="py-2 px-3 font-semibold text-white">${r.arrival_rate_rpm} RPM</td>
+            <td class="py-2 px-3 font-sans ${isHitl ? 'text-amber-400' : 'text-indigo-400 font-medium'}">${r.system}</td>
             <td class="py-2 px-3">${parseFloat(r.effective_throughput_rpm).toFixed(1)} RPM</td>
             <td class="py-2 px-3">${parseFloat(r.mean_queue_depth).toFixed(2)}</td>
-            <td class="py-2 px-3 ${parseFloat(r.drop_timeout_pct) > 0 ? 'text-rose-400 font-bold' : 'text-slate-400'}">${parseFloat(r.drop_timeout_pct).toFixed(1)}%</td>
-            <td class="py-2 px-3 ${parseFloat(r.attack_miss_pct) > 0 ? 'text-rose-400 font-bold' : 'text-slate-400'}">${parseFloat(r.attack_miss_pct).toFixed(1)}%</td>
+            <td class="py-2 px-3 ${parseFloat(r.drop_timeout_pct) > 0 ? 'text-rose-400 font-bold' : 'text-zinc-500'}">${parseFloat(r.drop_timeout_pct).toFixed(1)}%</td>
+            <td class="py-2 px-3 ${parseFloat(r.attack_miss_pct) > 0 ? 'text-rose-400 font-bold' : 'text-zinc-500'}">${parseFloat(r.attack_miss_pct).toFixed(1)}%</td>
             <td class="py-2 px-3">${parseFloat(r.p50_latency_ms).toFixed(1)} ms</td>
           `;
           tbody.appendChild(tr);
@@ -823,16 +984,16 @@
                 label: 'Simulated HITL Throughput',
                 data: hitlTput,
                 borderColor: '#f43f5e',
-                backgroundColor: 'rgba(244, 63, 94, 0.2)',
-                borderWidth: 2,
+                backgroundColor: 'rgba(244, 63, 94, 0.1)',
+                borderWidth: 1.5,
                 tension: 0.1
               },
               {
-                label: 'Automated C5 Throughput',
+                label: 'Automated Continuous Throughput',
                 data: autoTput,
                 borderColor: '#10b981',
-                backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                borderWidth: 2,
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 1.5,
                 tension: 0.1
               }
             ]
@@ -841,8 +1002,8 @@
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-              y: { grid: { color: 'rgba(51, 65, 85, 0.3)' }, ticks: { color: '#94a3b8' } },
-              x: { grid: { color: 'transparent' }, ticks: { color: '#94a3b8' } }
+              y: { grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#71717a' } },
+              x: { grid: { color: 'transparent' }, ticks: { color: '#71717a' } }
             }
           }
         });
@@ -857,19 +1018,19 @@
             labels: rates,
             datasets: [
               {
-                label: 'HITL Timeout Drop Rate (%)',
+                label: 'Timeout Drop Rate (%)',
                 data: hitlDrop,
                 borderColor: '#f59e0b',
-                backgroundColor: 'rgba(245, 158, 11, 0.2)',
-                borderWidth: 2,
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                borderWidth: 1.5,
                 tension: 0.1
               },
               {
-                label: 'HITL Fatigue Attack Miss Rate (%)',
+                label: 'Fatigue Attack Miss Rate (%)',
                 data: hitlMiss,
                 borderColor: '#f43f5e',
-                backgroundColor: 'rgba(244, 63, 94, 0.2)',
-                borderWidth: 2,
+                backgroundColor: 'rgba(244, 63, 94, 0.1)',
+                borderWidth: 1.5,
                 tension: 0.1
               }
             ]
@@ -878,8 +1039,8 @@
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-              y: { grid: { color: 'rgba(51, 65, 85, 0.3)' }, ticks: { color: '#94a3b8' } },
-              x: { grid: { color: 'transparent' }, ticks: { color: '#94a3b8' } }
+              y: { grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#71717a' } },
+              x: { grid: { color: 'transparent' }, ticks: { color: '#71717a' } }
             }
           }
         });
@@ -896,7 +1057,7 @@
         scenariosCache.forEach(s => {
           const opt = document.createElement('option');
           opt.value = s.id;
-          opt.textContent = `[${s.threat_id}] ${s.title || s.id} - ${s.oracle}`;
+          opt.textContent = `[${s.threat_id}] ${s.name || s.title || s.id} (${s.oracle})`;
           sel.appendChild(opt);
         });
       } catch (e) {
@@ -909,7 +1070,7 @@
       const cond = document.getElementById('sim-condition-select').value;
       const btn = document.getElementById('sim-run-btn');
       btn.disabled = true;
-      btn.innerHTML = `<span class="animate-spin mr-2">⚙️</span> Executing Pipeline...`;
+      btn.innerHTML = `<span class="animate-spin mr-1.5">◌</span> Executing Pipeline...`;
 
       try {
         const res = await fetch('/api/simulate', {
@@ -923,7 +1084,7 @@
         alert('Simulation failed: ' + e);
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="play" class="w-4 h-4"></i><span>Execute Live Simulation</span>`;
+        btn.innerHTML = `<i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i><span>Execute Simulation</span>`;
         lucide.createIcons();
       }
     }
@@ -940,23 +1101,20 @@
       const steps = document.getElementById('sim-steps-count');
 
       elapsed.textContent = `Duration: ${data.elapsed_ms} ms`;
-      steps.textContent = `Steps: ${data.steps_executed} / Max 5`;
+      steps.textContent = `Executed Steps: ${data.steps_executed} / Max 5`;
 
       if (data.attack_blocked) {
-        banner.className = 'p-4 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 flex items-center justify-between';
-        icon.className = 'p-2 rounded-lg bg-emerald-500/20 text-emerald-400';
+        banner.className = 'p-3.5 rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-emerald-300 flex items-center justify-between text-xs';
         icon.innerHTML = '🛡️';
         title.textContent = `DEFENSE SUCCESSFUL: ATTACK INTERCEPTED (${data.condition})`;
-        desc.textContent = `Oracle Evaluation: ${data.oracle_reason}`;
+        desc.textContent = `Oracle: ${data.oracle_reason}`;
       } else if (data.attack_succeeded) {
-        banner.className = 'p-4 rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-300 flex items-center justify-between';
-        icon.className = 'p-2 rounded-lg bg-rose-500/20 text-rose-400';
+        banner.className = 'p-3.5 rounded-lg border border-rose-500/20 bg-rose-500/10 text-rose-300 flex items-center justify-between text-xs';
         icon.innerHTML = '⚠️';
         title.textContent = `ATTACK SUCCEEDED (CANARY COMPROMISED)`;
-        desc.textContent = `Target was vulnerable under ${data.condition}. Oracle: ${data.oracle_reason}`;
+        desc.textContent = `Vulnerable under ${data.condition}. Oracle: ${data.oracle_reason}`;
       } else {
-        banner.className = 'p-4 rounded-xl border border-cyan-500/40 bg-cyan-500/10 text-cyan-300 flex items-center justify-between';
-        icon.className = 'p-2 rounded-lg bg-cyan-500/20 text-cyan-400';
+        banner.className = 'p-3.5 rounded-lg border border-indigo-500/20 bg-indigo-500/10 text-indigo-300 flex items-center justify-between text-xs';
         icon.innerHTML = 'ℹ️';
         title.textContent = `TASK COMPLETED (NEUTRAL)`;
         desc.textContent = data.oracle_reason;
@@ -967,19 +1125,20 @@
 
       (data.trace_steps || []).forEach(st => {
         const stepEl = document.createElement('div');
-        stepEl.className = 'p-3 rounded-lg bg-cyber-900 border border-cyber-800 space-y-1.5';
-        const verdictBadge = st.interceptor_verdict === 'BLOCK'
-          ? '<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold">BLOCKED</span>'
-          : '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">ALLOWED</span>';
+        stepEl.className = 'p-2.5 rounded bg-zinc-900/60 border border-zinc-800/80 space-y-1';
+        const isBlock = st.interceptor_verdict === 'BLOCK';
+        const verdictBadge = isBlock
+          ? '<span class="px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-400 font-bold border border-rose-500/20">BLOCKED</span>'
+          : '<span class="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20">ALLOWED</span>';
 
         stepEl.innerHTML = `
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 font-semibold">Step ${st.step_idx + 1}: ${st.tool_call ? st.tool_call.tool : 'Completion'}</span>
-            <div>${verdictBadge} ${st.policy_id ? '<span class="text-cyan-400 font-mono">(' + st.policy_id + ')</span>' : ''}</div>
+            <span class="text-zinc-300 font-semibold">Step ${st.step_idx + 1}: ${st.tool_call ? st.tool_call.tool : 'Completion'}</span>
+            <div>${verdictBadge} ${st.policy_id ? '<span class="text-indigo-400 font-mono">[' + st.policy_id + ']</span>' : ''}</div>
           </div>
-          ${st.tool_call ? '<div class="text-slate-300 text-[11px]">Arguments: ' + JSON.stringify(st.tool_call.arguments) + '</div>' : ''}
-          ${st.reason ? '<div class="text-amber-400 text-[11px]">Reason: ' + st.reason + '</div>' : ''}
-          ${st.tool_result ? '<div class="text-slate-400 text-[11px] truncate">Output: ' + st.tool_result.output + '</div>' : ''}
+          ${st.tool_call ? '<div class="text-zinc-400 text-[11px]">Arguments: ' + JSON.stringify(st.tool_call.arguments) + '</div>' : ''}
+          ${st.reason ? '<div class="text-amber-400 text-[11px]">Policy Reason: ' + st.reason + '</div>' : ''}
+          ${st.tool_result ? '<div class="text-zinc-500 text-[11px] truncate">Result: ' + st.tool_result.output + '</div>' : ''}
         `;
         traceBox.appendChild(stepEl);
       });
@@ -995,17 +1154,20 @@
 
         (data.entries || []).forEach(e => {
           const tr = document.createElement('tr');
-          const isBlock = e.verdict === 'BLOCK';
-          tr.className = isBlock ? 'bg-rose-500/5' : '';
+          const isBlock = (e.payload && e.payload.verdict === 'BLOCK') || e.event_type.includes('block') || e.event_type.includes('quarantine');
+          tr.className = isBlock ? 'bg-rose-500/[0.04]' : '';
+          const verdict = (e.payload && e.payload.verdict) || (isBlock ? 'BLOCK' : 'ALLOW');
+          const pol = (e.payload && e.payload.policy_id) || '-';
+
           tr.innerHTML = `
-            <td class="py-2 px-3 text-slate-400">${e.sequence}</td>
-            <td class="py-2 px-3 text-slate-400">${new Date(e.timestamp * 1000).toISOString().substr(11, 8)}</td>
-            <td class="py-2 px-3 text-cyan-400">${e.agent_id}</td>
-            <td class="py-2 px-3 text-slate-200">${e.action_type}</td>
-            <td class="py-2 px-3 font-bold ${isBlock ? 'text-rose-400' : 'text-emerald-400'}">${e.verdict}</td>
-            <td class="py-2 px-3 text-amber-400">${e.policy_id || '-'}</td>
-            <td class="py-2 px-3 text-slate-400 font-mono text-[11px]" title="${e.current_hash}">${(e.current_hash || '').substring(0, 14)}...</td>
-            <td class="py-2 px-3 text-slate-500 font-mono text-[11px]" title="${e.previous_hash}">${(e.previous_hash || '').substring(0, 14)}...</td>
+            <td class="py-2 px-3 text-zinc-500">${e.seq}</td>
+            <td class="py-2 px-3 text-zinc-400">${new Date(e.timestamp_ns / 1e6).toISOString().substr(11, 8)}</td>
+            <td class="py-2 px-3 text-indigo-400">${e.agent_id}</td>
+            <td class="py-2 px-3 text-zinc-300">${e.event_type}</td>
+            <td class="py-2 px-3 font-bold ${isBlock ? 'text-rose-400' : 'text-emerald-400'}">${verdict}</td>
+            <td class="py-2 px-3 text-zinc-400">${pol}</td>
+            <td class="py-2 px-3 text-zinc-500 font-mono text-[11px]" title="${e.entry_hash}">${(e.entry_hash || '').substring(0, 14)}...</td>
+            <td class="py-2 px-3 text-zinc-600 font-mono text-[11px]" title="${e.prev_hash}">${(e.prev_hash || '').substring(0, 14)}...</td>
           `;
           tbody.appendChild(tr);
         });
@@ -1017,7 +1179,7 @@
     async function verifyLedger() {
       const banner = document.getElementById('ledger-verification-banner');
       const text = document.getElementById('ledger-verification-text');
-      banner.className = 'mb-4 p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs flex items-center space-x-2';
+      banner.className = 'mb-4 p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs flex items-center space-x-2 font-mono';
       text.textContent = 'Verifying SHA-256 chain and cryptographic HMAC seals across all blocks...';
 
       setTimeout(async () => {
@@ -1025,16 +1187,16 @@
           const res = await fetch('/api/ledger/sample');
           const data = await res.json();
           if (data.chain_verification && data.chain_verification.valid) {
-            banner.className = 'mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center space-x-2';
+            banner.className = 'mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center space-x-2 font-mono';
             text.textContent = `VERIFIED VALID: ${data.chain_verification.count} chained blocks evaluated. All SHA-256 hashes unbroken. Zero tampering.`;
           } else {
-            banner.className = 'mb-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center space-x-2';
+            banner.className = 'mb-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center space-x-2 font-mono';
             text.textContent = 'INTEGRITY ERROR: Hash mismatch detected in ledger chain!';
           }
         } catch (e) {
           text.textContent = 'Verification error: ' + e;
         }
-      }, 500);
+      }, 400);
     }
 
     async function loadFiguresData() {
@@ -1047,22 +1209,22 @@
 
         figs.forEach(f => {
           const card = document.createElement('div');
-          card.className = 'glass-card glass-card-hover rounded-xl overflow-hidden flex flex-col transition';
+          card.className = 'linear-card linear-card-hover rounded-xl overflow-hidden flex flex-col transition';
           card.innerHTML = `
-            <a href="${f.url}" target="_blank" class="block bg-cyber-900 border-b border-cyber-800 p-2 cursor-zoom-in">
-              <img src="${f.url}" alt="${f.title}" class="w-full h-48 object-contain rounded hover:scale-105 transition duration-300">
+            <a href="${f.url}" target="_blank" class="block bg-zinc-950 border-b border-zinc-800 p-2 cursor-zoom-in">
+              <img src="${f.url}" alt="${f.title}" class="w-full h-44 object-contain rounded hover:scale-[1.02] transition duration-200">
             </a>
             <div class="p-4 flex-1 flex flex-col justify-between">
               <div>
-                <h3 class="text-xs font-bold text-white mb-1">${f.title}</h3>
-                <p class="text-[11px] text-slate-400">${f.description}</p>
+                <h3 class="text-xs font-semibold text-white mb-1">${f.title}</h3>
+                <p class="text-[11px] text-zinc-400 leading-normal">${f.description}</p>
               </div>
-              <div class="mt-3 pt-2 border-t border-cyber-800 flex items-center justify-between text-[11px]">
-                <a href="${f.url}" target="_blank" class="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center">
-                  <span>Open Full Resolution</span>
+              <div class="mt-3 pt-2 border-t border-zinc-800/80 flex items-center justify-between text-[11px]">
+                <a href="${f.url}" target="_blank" class="text-indigo-400 hover:text-indigo-300 font-medium inline-flex items-center space-x-1">
+                  <span>View High-Res</span>
                   <i data-lucide="external-link" class="w-3 h-3 ml-1"></i>
                 </a>
-                <span class="text-slate-500 font-mono">IEEE Paper</span>
+                <span class="text-zinc-500 font-mono">Figure Asset</span>
               </div>
             </div>
           `;
@@ -1078,4 +1240,3 @@
   </script>
 </body>
 </html>
-
